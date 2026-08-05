@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Log">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="robots" content="noindex, nofollow">
+<title>Log</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%235E5CE6'/%3E%3Cpath d='M26 62l14-16 12 10 10-16 12 14' stroke='white' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#F2F2F7; --card:#FFFFFF; --text:#000000; --label:#6C6C70; --label2:#8E8E93;
+  --sep:rgba(60,60,67,0.20); --fill:rgba(118,118,128,0.12); --fill2:rgba(118,118,128,0.20);
+  --shadow:0 1px 2px rgba(0,0,0,0.04);
+  --sleep:#5E5CE6; --energy:#FF9500; --mood:#32ADE6; --stress:#FF453A;
+  --study:#AF52DE; --trained:#30D158; --blue:#007AFF; --green:#34C759; --red:#FF3B30;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#000000; --card:#1C1C1E; --text:#FFFFFF; --label:#98989F; --label2:#8E8E93;
+    --sep:rgba(84,84,88,0.55); --fill:rgba(118,118,128,0.24); --fill2:rgba(118,118,128,0.36);
+    --shadow:none;
+    --sleep:#7D7AFF; --energy:#FF9F0A; --mood:#64D2FF; --stress:#FF453A;
+    --study:#BF5AF2; --trained:#30D158; --blue:#0A84FF; --green:#30D158; --red:#FF453A;
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--text);
+  font:400 17px/1.35 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  padding:env(safe-area-inset-top) 0 0 0;
+  overscroll-behavior-y:contain;
+}
+button,input{font-family:inherit;font-size:16px;color:inherit}
+button{border:0;background:none;padding:0;cursor:pointer}
+[hidden]{display:none !important}
+
+.wrap{max-width:520px;margin:0 auto;padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+header{padding:12px 20px 4px}
+h1{font-size:34px;font-weight:700;letter-spacing:-0.02em;margin:0}
+.subtitle{color:var(--label);font-size:15px;margin:2px 0 0}
+
+/* segmented control */
+.seg{display:flex;gap:2px;margin:16px 16px 4px;padding:2px;background:var(--fill);border-radius:9px}
+.seg button{flex:1;padding:7px 0;font-size:14px;font-weight:600;border-radius:7px;color:var(--label)}
+.seg button[aria-selected="true"]{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.12)}
+
+.section-label{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--label);margin:22px 20px 7px}
+.card{background:var(--card);border-radius:12px;margin:0 16px;box-shadow:var(--shadow);overflow:hidden}
+.row{padding:14px 16px;position:relative}
+.row + .row::before{content:"";position:absolute;top:0;left:16px;right:0;height:1px;background:var(--sep);transform:scaleY(.5)}
+.rowhead{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.rowhead svg{width:19px;height:19px;flex:none}
+.rowhead .name{font-size:16px;font-weight:600;flex:1}
+.rowhead .hint{font-size:13px;color:var(--label2);font-variant-numeric:tabular-nums}
+
+/* big value + stepper */
+.stepper{display:flex;align-items:center;gap:12px}
+.stepper .val{flex:1;text-align:center;font-size:34px;font-weight:600;letter-spacing:-0.02em;font-variant-numeric:tabular-nums}
+.stepper .val small{font-size:15px;font-weight:500;color:var(--label);margin-left:3px;letter-spacing:0}
+.step{width:44px;height:44px;border-radius:22px;background:var(--fill);display:grid;place-items:center;font-size:22px;font-weight:400;color:var(--text)}
+.step:active{background:var(--fill2)}
+
+input[type=time]{
+  width:100%;border:0;background:var(--fill);border-radius:10px;padding:10px 12px;
+  font-size:28px;font-weight:600;letter-spacing:-0.02em;text-align:center;
+  font-variant-numeric:tabular-nums;-webkit-appearance:none;appearance:none;
+}
+input[type=text]{
+  width:100%;border:0;background:var(--fill);border-radius:10px;padding:12px;font-size:16px;
+}
+input[type=text]::placeholder{color:var(--label2)}
+input[type=password]{
+  width:100%;border:0;background:var(--fill);border-radius:10px;padding:12px;font-size:16px;
+}
+
+/* 1-5 scale */
+.scale{display:flex;gap:8px}
+.scale button{
+  flex:1;height:46px;border-radius:11px;background:var(--fill);
+  font-size:17px;font-weight:600;color:var(--label);transition:background .12s,color .12s;
+}
+.scale button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.anchors{display:flex;justify-content:space-between;margin-top:7px;font-size:11.5px;color:var(--label2)}
+
+/* chips + toggle */
+.chips{display:flex;gap:8px;margin-top:10px}
+.chips button{flex:1;height:34px;border-radius:9px;background:var(--fill);font-size:14px;font-weight:600;color:var(--label)}
+.chips button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.yn{display:flex;gap:8px}
+.yn button{flex:1;height:46px;border-radius:11px;background:var(--fill);font-size:16px;font-weight:600;color:var(--label)}
+.yn button[aria-pressed="true"]{background:var(--accent);color:#fff}
+
+/* week strip */
+.week{margin:22px 16px 0;background:var(--card);border-radius:12px;box-shadow:var(--shadow);padding:14px 16px}
+.weekhead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:11px}
+.weekhead .t{font-size:15px;font-weight:600}
+.weekhead .c{font-size:15px;font-weight:600;color:var(--label);font-variant-numeric:tabular-nums}
+.dots{display:flex;justify-content:space-between}
+.dot{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1}
+.dot i{width:20px;height:20px;border-radius:10px;background:var(--fill2);display:block}
+.dot.on i{background:var(--green)}
+.dot.today i{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--blue)}
+.dot span{font-size:11px;color:var(--label2)}
+
+/* submit */
+.bar{
+  position:fixed;left:0;right:0;bottom:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+  background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-top:1px solid var(--sep);
+}
+.bar .inner{max-width:520px;margin:0 auto}
+.submit{width:100%;height:50px;border-radius:13px;background:var(--accent);color:#fff;font-size:17px;font-weight:600}
+.submit:disabled{opacity:.45}
+.status{text-align:center;font-size:13px;color:var(--label);margin:0 0 8px;min-height:16px}
+.status.err{color:var(--red)}
+.status.ok{color:var(--green)}
+
+/* setup */
+.setup{padding:8px 20px 40px;max-width:520px;margin:0 auto}
+.setup h2{font-size:22px;margin:18px 0 6px}
+.setup p{color:var(--label);font-size:15px;line-height:1.45}
+.setup ol{color:var(--label);font-size:15px;line-height:1.5;padding-left:22px}
+.setup code{background:var(--fill);padding:1px 5px;border-radius:5px;font-size:13.5px}
+.setup .submit{margin-top:14px}
+.setup a{color:var(--blue)}
+</style>
+</head>
+<body>
+
+<!-- ============ SETUP ============ -->
+<section class="setup" id="setup" hidden>
+  <header style="padding-left:0"><h1>Set up</h1></header>
+  <p>This page writes your log into the private <code>life-log-data</code> repo. It needs a
+  GitHub token with access to that repo and nothing else.</p>
+  <ol>
+    <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com token settings</a></li>
+    <li>Resource owner <code>MKothen</code>, repository access <b>Only select repositories</b> &rarr; <code>life-log-data</code></li>
+    <li>Repository permissions &rarr; <b>Contents: Read and write</b></li>
+    <li>Expiry 1 year. Generate, copy, paste below.</li>
+  </ol>
+  <p style="font-size:13.5px">Stored only in this browser. Save a copy in your password manager
+  &mdash; iOS can clear site storage after a week of not opening the page.</p>
+  <input type="password" id="tokenInput" placeholder="github_pat_..." autocomplete="off"
+         autocapitalize="off" autocorrect="off" spellcheck="false">
+  <p class="status" id="setupStatus"></p>
+  <button class="submit" id="verifyBtn" style="--accent:var(--blue)">Verify and save</button>
+</section>
+
+<!-- ============ APP ============ -->
+<div class="wrap" id="app" hidden>
+  <header>
+    <h1>Log</h1>
+    <p class="subtitle" id="dateLine"></p>
+  </header>
+
+  <div class="seg" role="tablist">
+    <button role="tab" id="tabMorning" aria-selected="true">Morning</button>
+    <button role="tab" id="tabEvening" aria-selected="false">Evening</button>
+  </div>
+
+  <!-- MORNING -->
+  <div id="cardMorning">
+    <p class="section-label">On waking</p>
+    <div class="card">
+      <div class="row" style="--accent:var(--sleep)">
+        <div class="rowhead">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--sleep)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+          <span class="name">Woke at</span>
+        </div>
+        <input type="time" id="wake">
+      </div>
+      <div class="row" style="--accent:var(--sleep)">
+        <div class="rowhead">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--sleep)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          <span class="name">Slept</span>
+          <span class="hint">estimate is fine</span>
+        </div>
+        <div class="stepper">
+          <button class="step" data-step="sleep_h" data-d="-0.5" aria-label="less">&minus;</button>
+          <div class="val"><span id="sleep_hVal">7</span><small>h</small></div>
+          <button class="step" data-step="sleep_h" data-d="0.5" aria-label="more">+</button>
+        </div>
+      </div>
+      <div class="row" style="--accent:var(--energy)">
+        <div class="rowhead">
+          <svg viewBox="0 0 24 24" fill="var(--energy)" stroke="none"><path d="M13 2L4.5 13.5H11l-1 8.5 8.5-11.5H12l1-8.5z"/></svg>
+          <span class="name">Energy</span>
+        </div>
+        <div class="scale" data-scale="energy" style="--accent:var(--energy)"></div>
+        <div class="anchors"><span>1 worst in 12 mo</span><span>3 ordinary</span><span>5 best</span></div>
+      </div>
+      <div class="row" style="--accent:var(--mood)">
+        <div class="rowhead">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--mood)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5s1.3 1.8 3.5 1.8 3.5-1.8 3.5-1.8"/><circle cx="9" cy="10" r="1" fill="var(--mood)" stroke="none"/><circle cx="15" cy="10" r="1" fill="var(--mood)" stroke="none"/></svg>
+          <span class="name">Mood</span>
+        </div>
+        <div class="scale" data-scale="mood" style="--accent:var(--mood)"></div>
+        <div class="anchors"><span>1 worst in 12 mo</span><span>3 ordinary</span><span>5 best</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVENING -->
+  <div id="cardEvening" hidden>
+    <p class="section-label">End of day</p>
+    <div class="card">
+      <div class="row" style="--accent:var(--study)">
+        <div class="rowhead">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--study)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H19v3H6.5"/></svg>
+          <span class="name">Active study</span>
+          <span class="hint">problems, not video</span>
+        </div>
+        <div class="stepper">
+          <button class="step" data-step="study_min" data-d="-15" aria-label="less">&minus;</button>
+          <div class="val"><span id="study_minVal">0</span><small>min</small></div>
+          <button class="step" data-step="study_min" data-d="15" aria-label="more">+</button>
+        </div>
+        <div class="chips" data-chips="study_min" style="--accent:var(--study)"></div>
+      </div>
+      <div class="row" style="--accent:var(--trained)">
+        <div class="rowhead">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--trained)" stroke-width="2" stroke-linecap="round"><path d="M4 9v6M8 6v12M16 6v12M20 9v6M8 12h8"/></svg>
+          <span class="name">Trained</span>
+        </div>
+        <div class="yn" data-yn="trained" style="--accent:var(--trained)">
+          <button data-v="y" aria-pressed="false">Yes</button>
+          <button data-v="n" aria-pressed="false">No</button>
+        </div>
+      </div>
+      <div class="row" style="--accent:var(--stress)">
+        <div class="rowhead">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--stress)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h3.5l2-6 3 12 2.5-9 2 5h7"/></svg>
+          <span class="name">Stress</span>
+          <span class="hint">5 = most</span>
+        </div>
+        <div class="scale" data-scale="stress" style="--accent:var(--stress)"></div>
+        <div class="anchors"><span>1 least stressed</span><span>3 ordinary</span><span>5 most</span></div>
+      </div>
+      <div class="row" style="--accent:var(--study)">
+        <div class="rowhead">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--label)" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+          <span class="name">Note</span>
+          <span class="hint">optional</span>
+        </div>
+        <input type="text" id="note" placeholder="one line" maxlength="180"
+               autocapitalize="sentences" autocomplete="off">
+      </div>
+    </div>
+  </div>
+
+  <div class="week">
+    <div class="weekhead"><span class="t" id="weekTitle">Diagnostic week</span><span class="c" id="weekCount">0/7</span></div>
+    <div class="dots" id="dots"></div>
+  </div>
+</div>
+
+<div class="bar" id="bar" hidden>
+  <div class="inner">
+    <p class="status" id="status"></p>
+    <button class="submit" id="submitBtn">Log morning</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+const OWNER='MKothen', REPO='life-log-data', API='https://api.github.com';
+const WEEK_START='2026-08-06', WEEK_END='2026-08-12';
+const TOKEN_KEY='lifelog.token', QUEUE_KEY='lifelog.queue';
+
+const $=s=>document.querySelector(s);
+const pad=n=>String(n).padStart(2,'0');
+const isoOf=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const addDays=(iso,n)=>{const d=new Date(iso+'T12:00:00');d.setDate(d.getDate()+n);return isoOf(d);};
+const tok=()=>localStorage.getItem(TOKEN_KEY);
+
+/* Evening logged after midnight still belongs to the day that just ended. */
+function logDate(slot){
+  const now=new Date();
+  if(slot==='evening'&&now.getHours()<4) return isoOf(new Date(now.getTime()-864e5));
+  return isoOf(now);
+}
+
+let slot = new Date().getHours()<15 ? 'morning' : 'evening';
+let state = {sleep_h:7, study_min:0, energy:null, mood:null, stress:null, trained:null};
+let entryNames = new Set();
+let existingSha = null;
+
+/* ---------- GitHub ---------- */
+function b64(str){return btoa(String.fromCharCode(...new TextEncoder().encode(str)));}
+function unb64(b){return new TextDecoder().decode(Uint8Array.from(atob(b),c=>c.charCodeAt(0)));}
+
+async function gh(path,opts={}){
+  return fetch(`${API}/repos/${OWNER}/${REPO}${path}`,{...opts,headers:{
+    Authorization:`Bearer ${tok()}`,Accept:'application/vnd.github+json',
+    'X-GitHub-Api-Version':'2022-11-28',...(opts.headers||{})}});
+}
+
+async function putEntry(date,slotName,fields,sha){
+  const path=`/contents/entries/${date}-${slotName}.json`;
+  const payload={date,slot:slotName,submitted_at:new Date().toISOString(),fields};
+  const body={message:`log: ${date} ${slotName}`,content:b64(JSON.stringify(payload,null,2))};
+  if(sha) body.sha=sha;
+  else{
+    const cur=await gh(path);
+    if(cur.status===200) body.sha=(await cur.json()).sha;
+  }
+  const res=await gh(path,{method:'PUT',body:JSON.stringify(body)});
+  if(!res.ok){const e=new Error(`GitHub ${res.status}`);e.status=res.status;throw e;}
+  return res.json();
+}
+
+/* ---------- offline queue ---------- */
+const readQueue=()=>{try{return JSON.parse(localStorage.getItem(QUEUE_KEY)||'[]');}catch{return[];}};
+const writeQueue=q=>localStorage.setItem(QUEUE_KEY,JSON.stringify(q));
+
+async function flushQueue(){
+  const q=readQueue();
+  if(!q.length) return;
+  const left=[];
+  for(const item of q){
+    try{await putEntry(item.date,item.slot,item.fields);}
+    catch(e){ if(e.status>=400&&e.status<500&&e.status!==429){/* drop unfixable */} else left.push(item); }
+  }
+  writeQueue(left);
+}
+
+/* ---------- rendering ---------- */
+function buildScales(){
+  document.querySelectorAll('[data-scale]').forEach(el=>{
+    const key=el.dataset.scale;
+    el.innerHTML='';
+    for(let i=1;i<=5;i++){
+      const b=document.createElement('button');
+      b.textContent=i; b.setAttribute('aria-pressed','false');
+      b.onclick=()=>{state[key]=state[key]===i?null:i;paint();};
+      el.appendChild(b);
+    }
+  });
+  const chips=document.querySelector('[data-chips="study_min"]');
+  [0,30,60,90].forEach(v=>{
+    const b=document.createElement('button');
+    b.textContent=v; b.setAttribute('aria-pressed','false');
+    b.onclick=()=>{state.study_min=v;paint();};
+    chips.appendChild(b);
+  });
+  document.querySelectorAll('[data-step]').forEach(b=>{
+    b.onclick=()=>{
+      const k=b.dataset.step, d=parseFloat(b.dataset.d);
+      const lim=k==='sleep_h'?[0,14]:[0,600];
+      state[k]=Math.min(lim[1],Math.max(lim[0],Math.round((state[k]+d)*100)/100));
+      paint();
+    };
+  });
+  document.querySelectorAll('[data-yn]').forEach(el=>{
+    const key=el.dataset.yn;
+    el.querySelectorAll('button').forEach(b=>{
+      b.onclick=()=>{state[key]=state[key]===b.dataset.v?null:b.dataset.v;paint();};
+    });
+  });
+}
+
+function weekDates(){
+  const today=isoOf(new Date());
+  if(today<=WEEK_END) return Array.from({length:7},(_,i)=>addDays(WEEK_START,i));
+  return Array.from({length:7},(_,i)=>addDays(today,i-6));
+}
+
+function paint(){
+  document.querySelectorAll('[data-scale]').forEach(el=>{
+    const k=el.dataset.scale;
+    [...el.children].forEach((b,i)=>b.setAttribute('aria-pressed',String(state[k]===i+1)));
+  });
+  document.querySelectorAll('[data-chips]').forEach(el=>{
+    [...el.children].forEach(b=>b.setAttribute('aria-pressed',String(state.study_min===+b.textContent)));
+  });
+  document.querySelectorAll('[data-yn]').forEach(el=>{
+    const k=el.dataset.yn;
+    el.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(state[k]===b.dataset.v)));
+  });
+  $('#sleep_hVal').textContent=Number.isInteger(state.sleep_h)?state.sleep_h:state.sleep_h.toFixed(1);
+  $('#study_minVal').textContent=state.study_min;
+
+  $('#tabMorning').setAttribute('aria-selected',String(slot==='morning'));
+  $('#tabEvening').setAttribute('aria-selected',String(slot==='evening'));
+  $('#cardMorning').hidden = slot!=='morning';
+  $('#cardEvening').hidden = slot!=='evening';
+
+  const d=logDate(slot);
+  const nice=new Date(d+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
+  $('#dateLine').textContent = (d===isoOf(new Date())?'':'for ')+nice;
+
+  const accent = slot==='morning'?'var(--sleep)':'var(--study)';
+  $('#bar').style.setProperty('--accent',accent);
+  const already = entryNames.has(`${d}-${slot}.json`);
+  $('#submitBtn').textContent = already
+    ? `Overwrite this ${slot==='morning'?'morning':'evening'}`
+    : `Log ${slot}`;
+
+  const dates=weekDates(), today=isoOf(new Date());
+  const dots=$('#dots'); dots.innerHTML='';
+  let n=0;
+  dates.forEach(dt=>{
+    const on=entryNames.has(`${dt}-morning.json`)||entryNames.has(`${dt}-evening.json`);
+    if(on) n++;
+    const el=document.createElement('div');
+    el.className='dot'+(on?' on':'')+(dt===today?' today':'');
+    el.innerHTML=`<i></i><span>${new Date(dt+'T12:00:00').toLocaleDateString(undefined,{weekday:'narrow'})}</span>`;
+    dots.appendChild(el);
+  });
+  $('#weekCount').textContent=`${n}/7`;
+  $('#weekTitle').textContent = today<=WEEK_END ? 'Diagnostic week' : 'Last 7 days';
+
+  const q=readQueue();
+  if(q.length){
+    const stale=q.some(i=>Date.now()-new Date(i.queued_at).getTime()>864e5);
+    setStatus(`${q.length} entry pending${stale?' - over 24h old':''}`, stale?'err':'');
+  }
+}
+
+function setStatus(msg,cls=''){const s=$('#status');s.textContent=msg;s.className='status '+cls;}
+
+/* ---------- load ---------- */
+async function loadEntries(){
+  const res=await gh('/contents/entries');
+  if(res.status===404){entryNames=new Set();return;}
+  if(res.status===401||res.status===403){throw Object.assign(new Error('auth'),{status:res.status});}
+  if(!res.ok) return;
+  const list=await res.json();
+  entryNames=new Set(list.filter(f=>f.name.endsWith('.json')).map(f=>f.name));
+}
+
+async function prefill(){
+  const d=logDate(slot), name=`${d}-${slot}.json`;
+  existingSha=null;
+  if(!entryNames.has(name)) return;
+  const res=await gh(`/contents/entries/${name}`);
+  if(!res.ok) return;
+  const meta=await res.json();
+  existingSha=meta.sha;
+  let f={};
+  try{f=JSON.parse(unb64(meta.content)).fields||{};}catch{return;}
+  if(slot==='morning'){
+    if(f.wake)$('#wake').value=f.wake;
+    if(f.sleep_h!=null)state.sleep_h=+f.sleep_h;
+    state.energy=f.energy!=null?+f.energy:null;
+    state.mood=f.mood!=null?+f.mood:null;
+  }else{
+    if(f.study_min!=null)state.study_min=+f.study_min;
+    state.stress=f.stress!=null?+f.stress:null;
+    state.trained=f.trained||null;
+    if(f.note)$('#note').value=f.note;
+  }
+  paint();
+}
+
+function collect(){
+  const f={};
+  if(slot==='morning'){
+    if($('#wake').value)f.wake=$('#wake').value;
+    f.sleep_h=state.sleep_h;
+    if(state.energy)f.energy=state.energy;
+    if(state.mood)f.mood=state.mood;
+  }else{
+    f.study_min=state.study_min;
+    if(state.trained)f.trained=state.trained;
+    if(state.stress)f.stress=state.stress;
+    const n=$('#note').value.trim();
+    if(n)f.note=n.replace(/,/g,';');
+  }
+  return f;
+}
+
+async function submit(){
+  const btn=$('#submitBtn'); btn.disabled=true;
+  const d=logDate(slot), fields=collect();
+  setStatus('Saving...');
+  try{
+    await putEntry(d,slot,fields,existingSha);
+    entryNames.add(`${d}-${slot}.json`);
+    await loadEntries().catch(()=>{});
+    await prefill();
+    setStatus('Logged','ok');
+    paint();
+  }catch(e){
+    if(e.status===401||e.status===403){
+      setStatus('Token expired - paste a new one','err');
+      localStorage.removeItem(TOKEN_KEY);
+      setTimeout(showSetup,900);
+    }else if(e.status){
+      setStatus(`Failed (${e.status})`,'err');
+    }else{
+      const q=readQueue();
+      q.push({date:d,slot,fields,queued_at:new Date().toISOString()});
+      writeQueue(q);
+      setStatus('Offline - queued, will send next time','err');
+    }
+  }finally{btn.disabled=false;}
+}
+
+/* ---------- boot ---------- */
+function showSetup(){$('#setup').hidden=false;$('#app').hidden=true;$('#bar').hidden=true;}
+function showApp(){$('#setup').hidden=true;$('#app').hidden=false;$('#bar').hidden=false;}
+
+$('#verifyBtn').onclick=async()=>{
+  const v=$('#tokenInput').value.trim();
+  const s=$('#setupStatus');
+  if(!v){s.textContent='Paste a token first';s.className='status err';return;}
+  s.textContent='Checking...';s.className='status';
+  localStorage.setItem(TOKEN_KEY,v);
+  try{
+    const res=await gh('');
+    if(!res.ok)throw new Error(String(res.status));
+    s.textContent='';showApp();await boot();
+  }catch(err){
+    localStorage.removeItem(TOKEN_KEY);
+    s.textContent='That token cannot reach life-log-data. Check the repo and Contents permission.';
+    s.className='status err';
+  }
+};
+
+$('#tabMorning').onclick=async()=>{slot='morning';paint();await prefill();};
+$('#tabEvening').onclick=async()=>{slot='evening';paint();await prefill();};
+$('#submitBtn').onclick=submit;
+
+async function boot(){
+  const now=new Date();
+  $('#wake').value=`${pad(now.getHours())}:${pad(Math.floor(now.getMinutes()/5)*5)}`;
+  try{
+    await flushQueue();
+    await loadEntries();
+    paint();
+    await prefill();
+  }catch(e){
+    if(e.status===401||e.status===403){localStorage.removeItem(TOKEN_KEY);showSetup();return;}
+    setStatus('Could not reach GitHub - you can still log, it will queue','err');
+  }
+  paint();
+}
+
+buildScales();
+if(tok()){showApp();boot();}else{showSetup();}
+</script>
+</body>
+</html>
