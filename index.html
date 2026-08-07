@@ -18,6 +18,7 @@
   --shadow:0 1px 2px rgba(0,0,0,0.04);
   --sleep:#5E5CE6; --energy:#FF9500; --mood:#32ADE6; --stress:#FF453A;
   --study:#AF52DE; --trained:#30D158; --blue:#007AFF; --green:#34C759; --red:#FF3B30;
+  --food:#A2845E; --nature:#00C7BE;
 }
 @media (prefers-color-scheme:dark){
   :root{
@@ -26,6 +27,7 @@
     --shadow:none;
     --sleep:#7D7AFF; --energy:#FF9F0A; --mood:#64D2FF; --stress:#FF453A;
     --study:#BF5AF2; --trained:#30D158; --blue:#0A84FF; --green:#30D158; --red:#FF453A;
+    --food:#AC8E68; --nature:#66D4CF;
   }
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -244,6 +246,36 @@ input[type=password]{
         <div class="scale" data-scale="stress" style="--accent:var(--stress)"></div>
         <div class="anchors"><span>1 least stressed</span><span>3 ordinary</span><span>5 most</span></div>
       </div>
+      <div class="row" style="--accent:var(--energy)">
+        <div class="rowhead">
+          <svg viewBox="0 0 24 24" fill="var(--energy)" stroke="none"><path d="M13 2L4.5 13.5H11l-1 8.5 8.5-11.5H12l1-8.5z"/></svg>
+          <span class="name">Energy now</span>
+          <span class="hint">same scale as this morning</span>
+        </div>
+        <div class="scale" data-scale="energy_pm" style="--accent:var(--energy)"></div>
+        <div class="anchors"><span>1 worst in 12 mo</span><span>3 ordinary</span><span>5 best</span></div>
+      </div>
+      <div class="row" style="--accent:var(--food)">
+        <div class="rowhead">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--food)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a2 2 0 0 0 4 0V3"/><path d="M8 11v10"/><path d="M17 3c1.7 1.6 2.2 3.6 2.2 5.4 0 1.8-.9 2.8-2.2 2.8s-2.2-1-2.2-2.8C14.8 6.6 15.3 4.6 17 3z"/><path d="M17 11.2V21"/></svg>
+          <span class="name">Big lunch</span>
+        </div>
+        <div class="yn" data-yn="lunch_big" style="--accent:var(--food)">
+          <button data-v="y" aria-pressed="false">Yes</button>
+          <button data-v="n" aria-pressed="false">No</button>
+        </div>
+      </div>
+      <div class="row" style="--accent:var(--nature)">
+        <div class="rowhead">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--nature)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-5"/><path d="M12 16 6 9h3.2L12 3l2.8 6H18z"/></svg>
+          <span class="name">Outdoors</span>
+          <span class="hint">a park counts</span>
+        </div>
+        <div class="yn" data-yn="outdoors" style="--accent:var(--nature)">
+          <button data-v="y" aria-pressed="false">Yes</button>
+          <button data-v="n" aria-pressed="false">No</button>
+        </div>
+      </div>
       <div class="row" style="--accent:var(--study)">
         <div class="rowhead">
           <svg viewBox="0 0 24 24" fill="none" stroke="var(--label)" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
@@ -289,7 +321,8 @@ function logDate(slot){
 }
 
 let slot = new Date().getHours()<15 ? 'morning' : 'evening';
-let state = {sleep_h:7, study_min:0, energy:null, mood:null, stress:null, trained:null};
+let state = {sleep_h:7, study_min:0, energy:null, mood:null, stress:null, trained:null,
+             energy_pm:null, lunch_big:null, outdoors:null};
 let entryNames = new Set();
 let existingSha = null;
 
@@ -456,6 +489,9 @@ async function prefill(){
     if(f.study_min!=null)state.study_min=+f.study_min;
     state.stress=f.stress!=null?+f.stress:null;
     state.trained=f.trained||null;
+    state.energy_pm=f.energy_pm!=null?+f.energy_pm:null;
+    state.lunch_big=f.lunch_big||null;
+    state.outdoors=f.outdoors||null;
     if(f.note)$('#note').value=f.note;
   }
   paint();
@@ -472,6 +508,9 @@ function collect(){
     f.study_min=state.study_min;
     if(state.trained)f.trained=state.trained;
     if(state.stress)f.stress=state.stress;
+    if(state.energy_pm)f.energy_pm=state.energy_pm;
+    if(state.lunch_big)f.lunch_big=state.lunch_big;
+    if(state.outdoors)f.outdoors=state.outdoors;
     const n=$('#note').value.trim();
     if(n)f.note=n.replace(/,/g,';');
   }
