@@ -100,6 +100,8 @@ input[type=password]{
 .yn button[aria-pressed="true"]{background:var(--accent);color:#fff}
 .yn.opt4{gap:6px}
 .yn.opt4 button{font-size:12px;line-height:1.15;padding:0 2px}
+.yn.opt3{gap:6px}
+.yn.opt3 button{font-size:13px;line-height:1.15;padding:0 2px}
 
 /* week strip */
 .week{margin:22px 16px 0;background:var(--card);border-radius:12px;box-shadow:var(--shadow);padding:14px 16px}
@@ -262,6 +264,18 @@ input[type=password]{
           <button data-v="n" aria-pressed="false">No</button>
         </div>
       </div>
+      <div class="row" style="--accent:var(--study)">
+        <div class="rowhead">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--study)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v6.5L4 19a2 2 0 0 0 1.8 3h12.4A2 2 0 0 0 20 19l-5-9.5V3"/><path d="M8 3h8"/></svg>
+          <span class="name">Lab day</span>
+          <span class="hint">in by 10:00, five hours</span>
+        </div>
+        <div class="yn opt3" data-yn="lab" style="--accent:var(--study)">
+          <button data-v="kept" aria-pressed="false">Kept</button>
+          <button data-v="missed" aria-pressed="false">Missed</button>
+          <button data-v="not_a_lab_day" aria-pressed="false">Not a lab day</button>
+        </div>
+      </div>
       <div class="row" style="--accent:var(--trained)">
         <div class="rowhead">
           <svg viewBox="0 0 24 24" fill="none" stroke="var(--trained)" stroke-width="2" stroke-linecap="round"><path d="M4 9v6M8 6v12M16 6v12M20 9v6M8 12h8"/></svg>
@@ -270,6 +284,17 @@ input[type=password]{
         <div class="yn" data-yn="trained" style="--accent:var(--trained)">
           <button data-v="y" aria-pressed="false">Yes</button>
           <button data-v="n" aria-pressed="false">No</button>
+        </div>
+      </div>
+      <div class="row" id="kindRow" style="--accent:var(--trained)">
+        <div class="rowhead">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--trained)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
+          <span class="name">Which session</span>
+          <span class="hint">a committed slot, or extra?</span>
+        </div>
+        <div class="yn" data-yn="trained_kind" style="--accent:var(--trained)">
+          <button data-v="committed" aria-pressed="false">Committed</button>
+          <button data-v="bonus" aria-pressed="false">Bonus</button>
         </div>
       </div>
       <div class="row" style="--accent:var(--stress)">
@@ -307,6 +332,17 @@ input[type=password]{
           <span class="hint">a park counts</span>
         </div>
         <div class="yn" data-yn="outdoors" style="--accent:var(--nature)">
+          <button data-v="y" aria-pressed="false">Yes</button>
+          <button data-v="n" aria-pressed="false">No</button>
+        </div>
+      </div>
+      <div class="row" style="--accent:var(--food)">
+        <div class="rowhead">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--food)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8.5" width="19" height="7" rx="3.5"/><path d="M12 8.5v7"/></svg>
+          <span class="name">Supplements</span>
+          <span class="hint">all four</span>
+        </div>
+        <div class="yn" data-yn="supps" style="--accent:var(--food)">
           <button data-v="y" aria-pressed="false">Yes</button>
           <button data-v="n" aria-pressed="false">No</button>
         </div>
@@ -358,7 +394,8 @@ function logDate(slot){
 let slot = new Date().getHours()<15 ? 'morning' : 'evening';
 let state = {sleep_h:7, study_min:0, energy:null, mood:null, stress:null, trained:null,
              energy_pm:null, lunch_big:null, outdoors:null,
-             attention:null, study_felt:null, artifact:null};
+             attention:null, study_felt:null, artifact:null,
+             lab:null, supps:null, trained_kind:null};
 let entryNames = new Set();
 let existingSha = null;
 
@@ -456,6 +493,8 @@ function paint(){
   });
   /* felt performance is only rateable on a day a session actually started */
   $('#feltRow').hidden = state.attention==='no_session'||state.attention==='never_started';
+  /* which-session only means anything once a session happened; G2 counts committed ones */
+  $('#kindRow').hidden = state.trained!=='y';
   $('#sleep_hVal').textContent=Number.isInteger(state.sleep_h)?state.sleep_h:state.sleep_h.toFixed(1);
   $('#study_minVal').textContent=state.study_min;
 
@@ -533,6 +572,9 @@ async function prefill(){
     state.attention=f.attention||null;
     state.study_felt=f.study_felt!=null?+f.study_felt:null;
     state.artifact=f.artifact||null;
+    state.lab=f.lab||null;
+    state.supps=f.supps||null;
+    state.trained_kind=f.trained_kind||null;
     if(f.note)$('#note').value=f.note;
   }
   paint();
@@ -555,6 +597,9 @@ function collect(){
     if(state.attention)f.attention=state.attention;
     if(state.study_felt&&state.attention!=='no_session'&&state.attention!=='never_started')f.study_felt=state.study_felt;
     if(state.artifact)f.artifact=state.artifact;
+    if(state.lab)f.lab=state.lab;
+    if(state.supps)f.supps=state.supps;
+    if(state.trained_kind&&state.trained==='y')f.trained_kind=state.trained_kind;
     const n=$('#note').value.trim();
     if(n)f.note=n.replace(/,/g,';');
   }
