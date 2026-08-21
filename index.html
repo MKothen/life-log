@@ -161,20 +161,6 @@ input[type=password]{
   <p class="status" id="setupStatus"></p>
   <button class="submit" id="verifyBtn" style="--accent:var(--blue)">Verify and save</button>
 
-  <p class="section-label">Reminders</p>
-  <div class="card">
-    <div class="row" style="--accent:var(--blue)">
-      <div class="rowhead">
-        <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
-        <span class="name">Push reminders</span>
-        <span class="hint" id="pushHint">off</span>
-      </div>
-      <button class="submit" id="pushBtn" style="--accent:var(--blue);margin:0 14px 14px">Enable reminders</button>
-    </div>
-  </div>
-  <p style="font-size:13px;color:var(--label2);margin:8px 20px 0;line-height:1.45">
-    11:00 if the morning card is still empty, 21:00 if the evening card is.
-    Nothing is sent on a day you have already logged.</p>
 
 </section>
 
@@ -381,6 +367,22 @@ input[type=password]{
     <div class="weekhead"><span class="t" id="weekTitle">Diagnostic week</span><span class="c" id="weekCount">0/7</span></div>
     <div class="dots" id="dots"></div>
   </div>
+
+  <p class="section-label">Reminders</p>
+  <div class="card">
+    <div class="row" style="--accent:var(--blue)">
+      <div class="rowhead">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        <span class="name">Push reminders</span>
+        <span class="hint" id="pushHint">off</span>
+      </div>
+      <button class="submit" id="pushBtn" style="--accent:var(--blue);margin:0 14px 14px">Enable reminders</button>
+    </div>
+  </div>
+  <p style="font-size:13px;color:var(--label2);margin:8px 20px 0;line-height:1.45">
+    11:00 if the morning card is still empty, 21:00 if the evening card is.
+    Nothing is sent on a day you have already logged.</p>
+
 </div>
 
 <div class="bar" id="bar" hidden>
@@ -681,6 +683,7 @@ async function boot(){
   $('#wake').value=`${pad(now.getHours())}:${pad(Math.floor(now.getMinutes()/5)*5)}`;
   try{
     await flushQueue();
+    await syncSubscription();
     await loadEntries();
     paint();
     await prefill();
@@ -694,6 +697,7 @@ async function boot(){
 /* ---------- push reminders ---------- */
 const VAPID_PUBLIC='BMKmA9OzGQ2IvpPnd2DbS32_8CLpV3YjFFeWjDQVqDjzUyDdyZa5cWhZtlQ8JBw0eZq4F-XmHpTabTM17uUkedE';
 const SUB_PATH='/contents/push/subscription.json';
+const SUB_KEY='lifelog.pendingsub';
 
 function urlB64ToU8(base64){
   const pad='='.repeat((4-base64.length%4)%4);
@@ -742,12 +746,43 @@ async function enablePush(){
     let sub=await reg.pushManager.getSubscription();
     if(!sub) sub=await reg.pushManager.subscribe({
       userVisibleOnly:true, applicationServerKey:urlB64ToU8(VAPID_PUBLIC)});
+    localStorage.setItem(SUB_KEY, JSON.stringify(sub.toJSON()));
+    if(!tok()){
+      setPushHint('subscribed - add your token','err');
+      btn.textContent='Re-register'; btn.disabled=false; return;
+    }
     await putSubscription(sub.toJSON());
+    localStorage.removeItem(SUB_KEY);
     setPushHint('on'); btn.textContent='Re-register';
   }catch(e){
-    setPushHint((e&&e.message)||'failed','err');
+    const m=(e&&e.message)||'failed';
+    setPushHint(m==='GitHub 401'?'subscribed - token rejected':m,'err');
   }
   btn.disabled=false;
+}
+
+/* A subscription can exist on the device while the repo copy failed -- no token
+   yet, or a token that had expired. Retry the upload whenever the app boots with
+   a working token, so the two can never stay out of step silently. */
+async function syncSubscription(){
+  if(!tok()) return;
+  let pending=null;
+  try{ pending=JSON.parse(localStorage.getItem(SUB_KEY)||'null'); }catch(e){}
+  if(!pending){
+    try{
+      const reg=await navigator.serviceWorker.getRegistration();
+      const sub=reg&&await reg.pushManager.getSubscription();
+      if(!sub) return;
+      const cur=await gh(SUB_PATH);
+      if(cur.status===200) return;          // repo already has one
+      pending=sub.toJSON();
+    }catch(e){ return; }
+  }
+  try{
+    await putSubscription(pending);
+    localStorage.removeItem(SUB_KEY);
+    setPushHint('on');
+  }catch(e){}
 }
 
 if('serviceWorker' in navigator){
