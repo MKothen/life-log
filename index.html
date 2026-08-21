@@ -10,6 +10,8 @@
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <meta name="robots" content="noindex, nofollow">
 <title>Log</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon-192.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%235E5CE6'/%3E%3Cpath d='M26 62l14-16 12 10 10-16 12 14' stroke='white' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
 :root{
@@ -158,6 +160,22 @@ input[type=password]{
          autocapitalize="off" autocorrect="off" spellcheck="false">
   <p class="status" id="setupStatus"></p>
   <button class="submit" id="verifyBtn" style="--accent:var(--blue)">Verify and save</button>
+
+  <p class="section-label">Reminders</p>
+  <div class="card">
+    <div class="row" style="--accent:var(--blue)">
+      <div class="rowhead">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        <span class="name">Push reminders</span>
+        <span class="hint" id="pushHint">off</span>
+      </div>
+      <button class="submit" id="pushBtn" style="--accent:var(--blue);margin:0 14px 14px">Enable reminders</button>
+    </div>
+  </div>
+  <p style="font-size:13px;color:var(--label2);margin:8px 20px 0;line-height:1.45">
+    11:00 if the morning card is still empty, 21:00 if the evening card is.
+    Nothing is sent on a day you have already logged.</p>
+
 </section>
 
 <!-- ============ APP ============ -->
@@ -673,8 +691,73 @@ async function boot(){
   paint();
 }
 
+/* ---------- push reminders ---------- */
+const VAPID_PUBLIC='BMKmA9OzGQ2IvpPnd2DbS32_8CLpV3YjFFeWjDQVqDjzUyDdyZa5cWhZtlQ8JBw0eZq4F-XmHpTabTM17uUkedE';
+const SUB_PATH='/contents/push/subscription.json';
+
+function urlB64ToU8(base64){
+  const pad='='.repeat((4-base64.length%4)%4);
+  const raw=atob((base64+pad).replace(/-/g,'+').replace(/_/g,'/'));
+  return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));
+}
+
+async function putSubscription(sub){
+  const body={message:'push: subscription',
+    content:b64(JSON.stringify({subscription:sub,updated_at:new Date().toISOString()},null,2))};
+  const cur=await gh(SUB_PATH);
+  if(cur.status===200) body.sha=(await cur.json()).sha;
+  const res=await gh(SUB_PATH,{method:'PUT',body:JSON.stringify(body)});
+  if(!res.ok) throw new Error('GitHub '+res.status);
+}
+
+function setPushHint(t,cls){
+  const el=$('#pushHint'); if(!el) return;
+  el.textContent=t; el.style.color=cls==='err'?'var(--red,#FF3B30)':'';
+}
+
+async function refreshPushState(){
+  const btn=$('#pushBtn'); if(!btn) return;
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)){
+    setPushHint('not supported on this browser'); btn.disabled=true; return;
+  }
+  if(Notification.permission==='denied'){
+    setPushHint('blocked in Settings','err'); btn.disabled=true; return;
+  }
+  try{
+    const reg=await navigator.serviceWorker.getRegistration();
+    const sub=reg&&await reg.pushManager.getSubscription();
+    if(sub){ setPushHint('on'); btn.textContent='Re-register'; }
+    else { setPushHint('off'); btn.textContent='Enable reminders'; }
+  }catch(e){ setPushHint('off'); }
+}
+
+async function enablePush(){
+  const btn=$('#pushBtn');
+  btn.disabled=true; setPushHint('asking...');
+  try{
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted'){ setPushHint('permission refused','err'); btn.disabled=false; return; }
+    const reg=await navigator.serviceWorker.register('./sw.js');
+    await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub) sub=await reg.pushManager.subscribe({
+      userVisibleOnly:true, applicationServerKey:urlB64ToU8(VAPID_PUBLIC)});
+    await putSubscription(sub.toJSON());
+    setPushHint('on'); btn.textContent='Re-register';
+  }catch(e){
+    setPushHint((e&&e.message)||'failed','err');
+  }
+  btn.disabled=false;
+}
+
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+
 buildScales();
 if(tok()){showApp();boot();}else{showSetup();}
+const _pb=$('#pushBtn');
+if(_pb){_pb.addEventListener('click',enablePush);refreshPushState();}
 </script>
 </body>
 </html>
