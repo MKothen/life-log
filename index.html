@@ -925,7 +925,8 @@ const TODO_CAT   = 'lifelog.todocat';    // last category used in the capture ba
 const TODO_SWEEP = 'lifelog.todosweep';  // local date the sweep was dismissed
 
 const TODO_VERSION = 1;
-const TODO_SETTINGS = {someday_limit: 10, review_after_days: 14};
+const TODO_SETTINGS = {someday_limit: 10, review_after_days: 14,
+                       overdue_remind_every_days: 1};
 /* Chosen by Max 2026-08-31. The three uni categories sit in the cool-blue
  * family and personal is green, so the colour bar encodes the uni/non-uni
  * split as well as the category. Mirror of DEFAULT_CATEGORIES in todo.py. */
@@ -1239,6 +1240,19 @@ function todoDetail(item, doc){
   box.className = 'tododetail';
   box.onclick = e=>e.stopPropagation();
 
+  /* Text is the primary field, so it comes first. Unlike note it is NOT
+   * nullable (validate_text rejects empty), so a cleared box reverts rather
+   * than writing an item with no text. */
+  const txt = document.createElement('input');
+  txt.type = 'text'; txt.maxLength = 200; txt.value = item.text || '';
+  txt.setAttribute('aria-label', 'Task text');
+  txt.onchange = ()=>{
+    const v = txt.value.trim();
+    if(!v || v === item.text){ txt.value = item.text || ''; return; }
+    todoQueue({op:'edit', at:new Date().toISOString(), id:item.id,
+               patch:{text:v}});
+  };
+
   const due = document.createElement('input');
   due.type = 'date'; due.value = item.due || '';
   due.onchange = ()=>todoQueue({op:'edit', at:new Date().toISOString(), id:item.id,
@@ -1287,7 +1301,7 @@ function todoDetail(item, doc){
     todoQueue({op:'delete', at:new Date().toISOString(), id:item.id});
   };
 
-  [due, prio, cats, note, del].forEach(el=>box.appendChild(el));
+  [txt, due, prio, cats, note, del].forEach(el=>box.appendChild(el));
   return box;
 }
 
