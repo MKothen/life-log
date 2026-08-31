@@ -882,8 +882,6 @@ let tstate = {doc:null, sha:null, filt:'all', expanded:null, sweep:null};
  * A later `function` declaration of the same name silently wins by hoisting,
  * so leaving both behind would work by accident and confuse anyone grepping
  * for the definition. */
-function todoFillCats(){}
-function todoDetail(){ return document.createElement('div'); }
 function sweepMaybeOpen(){}
 
 function todoBlankDoc(){
@@ -1122,6 +1120,96 @@ function todoRow(item, doc){
   row.appendChild(body);
   if(tstate.expanded===item.id) row.appendChild(todoDetail(item, doc));
   return row;
+}
+
+/* ---------- capture: one action, structure deferred (spec D6) ---------- */
+
+function todoFillCats(){
+  const sel = $('#todoCat');
+  if(!sel || !tstate.doc) return;
+  const last = localStorage.getItem(TODO_CAT);
+  sel.innerHTML = '';
+  (tstate.doc.categories||[]).forEach(c=>{
+    const o = document.createElement('option');
+    o.value = c.id; o.textContent = c.label;
+    sel.appendChild(o);
+  });
+  if(last && [...sel.options].some(o=>o.value===last)) sel.value = last;
+}
+
+function todoAdd(){
+  const input = $('#todoText');
+  const text = input.value.trim();
+  if(!text) return;
+  const cat = $('#todoCat').value;
+  localStorage.setItem(TODO_CAT, cat);
+  todoQueue({op:'add', at:new Date().toISOString(), item:{
+    id: todoId(tstate.doc), text, cat, due:null, prio:2, note:null,
+    done:false, created_at:new Date().toISOString(), done_at:null, reviewed_at:null
+  }});
+  input.value = '';
+  /* Deliberately does NOT open the sweep, however long SOMEDAY has grown:
+   * interrupting a capture is exactly the wrong moment (spec 4.4). */
+}
+
+/* ---------- detail panel: due, priority, category, note, delete ---------- */
+
+function todoDetail(item, doc){
+  const box = document.createElement('div');
+  box.className = 'tododetail';
+  box.onclick = e=>e.stopPropagation();
+
+  const due = document.createElement('input');
+  due.type = 'date'; due.value = item.due || '';
+  due.onchange = ()=>todoQueue({op:'edit', at:new Date().toISOString(), id:item.id,
+                                patch:{due: due.value || null}});
+
+  const prio = document.createElement('div');
+  prio.className = 'seg'; prio.setAttribute('role','tablist');
+  [[1,'High'],[2,'Normal'],[3,'Low']].forEach(([v,label])=>{
+    const b = document.createElement('button');
+    b.setAttribute('role','tab');
+    b.setAttribute('aria-selected', String((item.prio||2)===v));
+    b.textContent = label;
+    b.onclick = ()=>todoQueue({op:'edit', at:new Date().toISOString(), id:item.id,
+                               patch:{prio:v}});
+    prio.appendChild(b);
+  });
+
+  const cats = document.createElement('div');
+  cats.className = 'chips';
+  (doc.categories||[]).forEach(c=>{
+    const b = document.createElement('button');
+    b.textContent = c.label;
+    b.setAttribute('aria-pressed', String(item.cat===c.id));
+    b.onclick = ()=>todoQueue({op:'edit', at:new Date().toISOString(), id:item.id,
+                               patch:{cat:c.id}});
+    cats.appendChild(b);
+  });
+
+  const note = document.createElement('input');
+  note.type = 'text'; note.maxLength = 500; note.placeholder = 'note';
+  note.value = item.note || '';
+  note.onchange = ()=>todoQueue({op:'edit', at:new Date().toISOString(), id:item.id,
+                                 patch:{note: note.value.trim() || null}});
+
+  const del = document.createElement('button');
+  del.className = 'submit'; del.textContent = 'Delete';
+  del.style.setProperty('--accent', 'var(--red)');
+  del.onclick = ()=>{
+    if(!confirm(`Delete "${item.text}"?`)) return;
+    tstate.expanded = null;
+    todoQueue({op:'delete', at:new Date().toISOString(), id:item.id});
+  };
+
+  [due, prio, cats, note, del].forEach(el=>box.appendChild(el));
+  return box;
+}
+
+const _todoAddBtn = $('#todoAdd');
+if(_todoAddBtn){
+  _todoAddBtn.onclick = todoAdd;
+  $('#todoText').addEventListener('keydown', e=>{ if(e.key==='Enter') todoAdd(); });
 }
 
 const _todoFilter = $('#todoFilter');
