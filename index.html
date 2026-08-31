@@ -141,8 +141,16 @@ input[type=password]{
 .setup a{color:var(--blue)}
 
 /* todo */
+
+/* The page has no global color-scheme, so native controls (date input, the
+   category select, their picker popups) render light-mode white inside a dark
+   page. color-scheme inherits, so declaring it on the todo containers fixes
+   every control inside them without touching the daily cards. */
+#cardTodo, #sweep, #todoBar{color-scheme:light dark}
+
 .todorow{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;
-         border-left:4px solid #c7c7cc;background:#fff;margin:0 0 1px;flex-wrap:wrap}
+         border-left:4px solid var(--fill2);background:var(--card);
+         margin:0 0 1px;flex-wrap:wrap}
 .todocheck{border:0;background:none;font-size:20px;line-height:1;padding:2px 4px;
            min-width:34px;min-height:34px;color:var(--label);cursor:pointer}
 .todobody{flex:1;min-width:0;cursor:pointer}
@@ -156,8 +164,10 @@ input[type=password]{
 .tododone summary{font-size:13px;color:var(--label);padding:6px 20px;cursor:pointer}
 .tododetail{flex-basis:100%;display:flex;flex-direction:column;gap:8px;
             padding:10px 0 4px;border-top:1px solid var(--fill);margin-top:8px}
+/* Matches the app's input convention: no border, --fill background. The
+   date input needs it spelled out because input[type=text] does not cover it. */
 .tododetail input{border-radius:10px;padding:10px;width:100%;box-sizing:border-box;
-                  border:1px solid var(--fill);font-size:15px}
+                  border:0;background:var(--fill);color:var(--text);font-size:15px}
 /* Six categories will not fit on one phone-width row at flex:1; let them wrap
    and size to their label instead of being squeezed off the edge. */
 .tododetail .chips{flex-wrap:wrap;gap:6px}
@@ -165,7 +175,12 @@ input[type=password]{
 .tododetail .seg{margin:0}
 .sweepwrap{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;
            align-items:center;justify-content:center;padding:20px;z-index:50}
-.sweepcard{width:100%;max-width:380px;background:#fff;border-radius:14px}
+.sweepcard{width:100%;max-width:380px;background:var(--card);border-radius:14px}
+.sweepcard .todotext{color:var(--text)}
+/* A bare <select> ignores the palette and renders as a white pill next to the
+   dark text input. Same treatment as input[type=text] gets. */
+.todocatsel{flex:0 0 auto;border:0;background:var(--fill);color:var(--text);
+            border-radius:10px;padding:10px 8px;font-size:15px;max-width:38%}
 .sweepacts{display:flex;gap:8px;padding:0 14px 10px}
 .sweepacts .submit{flex:1;margin:0;padding:12px 0}
 </style>
@@ -449,7 +464,7 @@ input[type=password]{
     <p class="status" id="status"></p>
     <button class="submit" id="submitBtn">Log morning</button>
     <div id="todoBar" hidden style="display:flex;gap:8px;padding:0 14px 14px">
-      <select id="todoCat" style="flex:0 0 auto;border-radius:10px;padding:10px"></select>
+      <select id="todoCat" class="todocatsel"></select>
       <input type="text" id="todoText" placeholder="type here..." maxlength="200"
              autocomplete="off" style="flex:1;min-width:0;border-radius:10px;padding:10px">
       <!-- width:auto is load-bearing: .submit sets width:100%, which as a
