@@ -174,6 +174,7 @@ input[type=password]{
   <div class="seg" role="tablist">
     <button role="tab" id="tabMorning" aria-selected="true">Morning</button>
     <button role="tab" id="tabEvening" aria-selected="false">Evening</button>
+    <button role="tab" id="tabTodo" aria-selected="false">Todo</button>
   </div>
 
   <!-- MORNING -->
@@ -363,6 +364,18 @@ input[type=password]{
     </div>
   </div>
 
+  <!-- TODO -->
+  <div id="cardTodo" hidden>
+    <div class="seg" role="tablist" id="todoFilter">
+      <button role="tab" data-filt="all" aria-selected="true">All</button>
+      <button role="tab" data-filt="uni" aria-selected="false">Uni</button>
+      <button role="tab" data-filt="non-uni" aria-selected="false">Non-uni</button>
+    </div>
+    <div id="todoList"></div>
+  </div>
+
+  <!-- Week dots + reminders belong to the daily log, not to todos. -->
+  <div id="dailyExtras">
   <div class="week">
     <div class="weekhead"><span class="t" id="weekTitle">Diagnostic week</span><span class="c" id="weekCount">0/7</span></div>
     <div class="dots" id="dots"></div>
@@ -382,6 +395,7 @@ input[type=password]{
   <p style="font-size:13px;color:var(--label2);margin:8px 20px 0;line-height:1.45">
     11:00 if the morning card is still empty, 21:00 if the evening card is.
     Nothing is sent on a day you have already logged.</p>
+  </div>
 
 </div>
 
@@ -389,6 +403,12 @@ input[type=password]{
   <div class="inner">
     <p class="status" id="status"></p>
     <button class="submit" id="submitBtn">Log morning</button>
+    <div id="todoBar" hidden style="display:flex;gap:8px;padding:0 14px 14px">
+      <select id="todoCat" style="flex:0 0 auto;border-radius:10px;padding:10px"></select>
+      <input type="text" id="todoText" placeholder="type here..." maxlength="200"
+             autocomplete="off" style="flex:1;min-width:0;border-radius:10px;padding:10px">
+      <button class="submit" id="todoAdd" style="flex:0 0 auto;margin:0;padding:10px 16px">+</button>
+    </div>
   </div>
 </div>
 
@@ -412,6 +432,9 @@ function logDate(slot){
 }
 
 let slot = new Date().getHours()<15 ? 'morning' : 'evening';
+/* Which card is showing. `slot` stays morning|evening for the daily-log logic
+ * (logDate, prefill, collect); `tab` adds 'todo' and drives visibility only. */
+let tab = slot;
 let state = {sleep_h:7, study_min:0, energy:null, mood:null, stress:null, trained:null,
              energy_pm:null, lunch_big:null, outdoors:null,
              attention:null, study_felt:null, artifact:null,
@@ -518,10 +541,15 @@ function paint(){
   $('#sleep_hVal').textContent=Number.isInteger(state.sleep_h)?state.sleep_h:state.sleep_h.toFixed(1);
   $('#study_minVal').textContent=state.study_min;
 
-  $('#tabMorning').setAttribute('aria-selected',String(slot==='morning'));
-  $('#tabEvening').setAttribute('aria-selected',String(slot==='evening'));
-  $('#cardMorning').hidden = slot!=='morning';
-  $('#cardEvening').hidden = slot!=='evening';
+  $('#tabMorning').setAttribute('aria-selected',String(tab==='morning'));
+  $('#tabEvening').setAttribute('aria-selected',String(tab==='evening'));
+  $('#tabTodo').setAttribute('aria-selected',String(tab==='todo'));
+  $('#cardMorning').hidden = tab!=='morning';
+  $('#cardEvening').hidden = tab!=='evening';
+  $('#cardTodo').hidden    = tab!=='todo';
+  $('#dailyExtras').hidden = tab==='todo';
+  $('#submitBtn').hidden   = tab==='todo';
+  $('#todoBar').hidden     = tab!=='todo';
 
   const d=logDate(slot);
   const nice=new Date(d+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
@@ -674,8 +702,15 @@ $('#verifyBtn').onclick=async()=>{
   }
 };
 
-$('#tabMorning').onclick=async()=>{slot='morning';paint();await prefill();};
-$('#tabEvening').onclick=async()=>{slot='evening';paint();await prefill();};
+$('#tabMorning').onclick=async()=>{slot='morning';tab='morning';paint();await prefill();};
+$('#tabEvening').onclick=async()=>{slot='evening';tab='evening';paint();await prefill();};
+$('#tabTodo').onclick=async()=>{
+  tab='todo'; paint();
+  await todoLoad();
+  todoFillCats();
+  todoRender();
+  sweepMaybeOpen();
+};
 $('#submitBtn').onclick=submit;
 
 async function boot(){
@@ -793,6 +828,149 @@ buildScales();
 if(tok()){showApp();boot();}else{showSetup();}
 const _pb=$('#pushBtn');
 if(_pb){_pb.addEventListener('click',enablePush);refreshPushState();}
+
+/* ===========================================================================
+ * TODO  --  structured task list
+ * Spec: 02_Areas/infrastructure/2026-08-31_life-log-todo-design.md
+ * =========================================================================== */
+
+const TODO_PATH  = '/contents/todos/todos.json';
+const TODO_KEY   = 'lifelog.todos';      // {doc, sha} last known server state
+const TODO_OPS   = 'lifelog.todoops';    // pending operations
+const TODO_CAT   = 'lifelog.todocat';    // last category used in the capture bar
+const TODO_SWEEP = 'lifelog.todosweep';  // local date the sweep was dismissed
+
+const TODO_VERSION = 1;
+const TODO_SETTINGS = {someday_limit: 10, review_after_days: 14};
+const TODO_CATEGORIES = [
+  {id:'thesis',    label:'Thesis',    color:'#3b82f6', uni:true},
+  {id:'neuroai',   label:'NeuroAI',   color:'#6366f1', uni:true},
+  {id:'uni-admin', label:'Uni admin', color:'#14b8a6', uni:true},
+  {id:'kitchen',   label:'Kitchen',   color:'#f59e0b', uni:false},
+  {id:'home',      label:'Home',      color:'#22c55e', uni:false},
+  {id:'personal',  label:'Personal',  color:'#94a3b8', uni:false}
+];
+
+let tstate = {doc:null, sha:null, filt:'all', expanded:null, sweep:null};
+
+/* --- forward-declaration stubs -------------------------------------------
+ * Tasks 6, 7 and 8 supply the real versions and DELETE the stub they replace.
+ * A later `function` declaration of the same name silently wins by hoisting,
+ * so leaving both behind would work by accident and confuse anyone grepping
+ * for the definition. */
+function todoRender(){}
+function todoFillCats(){}
+function todoDetail(){ return document.createElement('div'); }
+function sweepMaybeOpen(){}
+
+function todoBlankDoc(){
+  return {version:TODO_VERSION, updated_at:new Date().toISOString(),
+          settings:{...TODO_SETTINGS}, categories:TODO_CATEGORIES.map(c=>({...c})),
+          items:[]};
+}
+function todoSettings(doc){ return {...TODO_SETTINGS, ...(doc.settings||{})}; }
+
+function todoId(doc){
+  const taken = new Set((doc.items||[]).map(i=>i.id));
+  const abc = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  for(;;){
+    const b = crypto.getRandomValues(new Uint8Array(6));
+    const id = Array.from(b, n=>abc[n % 36]).join('');
+    if(!taken.has(id)) return id;
+  }
+}
+
+const readOps   = ()=>{try{return JSON.parse(localStorage.getItem(TODO_OPS)||'[]');}catch{return[];}};
+const writeOps  = o=>localStorage.setItem(TODO_OPS, JSON.stringify(o));
+const readCache = ()=>{try{return JSON.parse(localStorage.getItem(TODO_KEY)||'null');}catch{return null;}};
+const writeCache=(doc,sha)=>localStorage.setItem(TODO_KEY, JSON.stringify({doc,sha}));
+
+/* Mirror of vault_infra.life.todo.apply_ops. Idempotent: a 409 retry replays
+ * the same ops against a document that may already contain them. `toggle`
+ * carries the absolute target state, never an inversion. */
+function todoApplyOps(doc, ops){
+  const find = id => (doc.items||[]).find(i=>i.id===id);
+  for(const op of ops){
+    if(op.op==='add'){
+      if(!find(op.item.id)) doc.items.push(op.item);
+      continue;
+    }
+    if(op.op==='delete'){
+      doc.items = (doc.items||[]).filter(i=>i.id!==op.id);
+      continue;
+    }
+    const it = find(op.id);
+    if(!it) continue;                       // deleted elsewhere: legitimate
+    if(op.op==='toggle'){ it.done=!!op.done; it.done_at=op.done_at||null; }
+    else if(op.op==='edit'){ Object.assign(it, op.patch); }
+    else if(op.op==='keep'){ it.reviewed_at = op.at || new Date().toISOString(); }
+  }
+  return doc;
+}
+
+async function todoFetch(){
+  const res = await gh(TODO_PATH);
+  if(res.status===404) return {doc:todoBlankDoc(), sha:null};
+  if(res.status===401||res.status===403) throw Object.assign(new Error('auth'),{status:res.status});
+  if(!res.ok) throw Object.assign(new Error('http'),{status:res.status});
+  const meta = await res.json();
+  return {doc:JSON.parse(unb64(meta.content)), sha:meta.sha};
+}
+
+async function todoLoad(){
+  const cached = readCache();
+  if(cached){
+    /* The cache holds the last SERVER state, so pending ops must be replayed
+     * over a copy of it -- otherwise an offline reopen shows the user their
+     * unsynced adds and completions disappearing. */
+    tstate.doc = todoApplyOps(JSON.parse(JSON.stringify(cached.doc)), readOps());
+    tstate.sha = cached.sha;
+  }
+  try{
+    const {doc, sha} = await todoFetch();
+    writeCache(doc, sha);
+    tstate.doc = todoApplyOps(JSON.parse(JSON.stringify(doc)), readOps());
+    tstate.sha = sha;
+  }catch(e){
+    if(!tstate.doc) tstate.doc = todoApplyOps(todoBlankDoc(), readOps());
+    if(e.status===401||e.status===403) throw e;
+  }
+}
+
+/* Queue one operation, apply it locally for an instant UI, then sync. */
+function todoQueue(op){
+  const ops = readOps(); ops.push(op); writeOps(ops);
+  todoApplyOps(tstate.doc, [op]);
+  todoRender();
+  todoSave();
+}
+
+async function todoSave(){
+  const ops = readOps();
+  if(!ops.length) return;
+  for(let attempt=0; attempt<3; attempt++){
+    try{
+      const {doc, sha} = await todoFetch();
+      todoApplyOps(doc, ops);
+      doc.updated_at = new Date().toISOString();
+      const body = {message:`todo: ${ops.length} change(s)`,
+                    content:b64(JSON.stringify(doc,null,2)+'\n')};
+      if(sha) body.sha = sha;
+      const res = await gh(TODO_PATH, {method:'PUT', body:JSON.stringify(body)});
+      if(res.ok){
+        const meta = await res.json();
+        tstate.doc = doc; tstate.sha = meta.content.sha;
+        writeCache(doc, tstate.sha); writeOps([]);
+        setStatus('Saved','ok'); todoRender(); return;
+      }
+      if(res.status===409) continue;         // someone wrote; re-read and re-apply
+      setStatus(`Failed (${res.status})`,'err'); return;
+    }catch(e){
+      setStatus('Offline - saved on this phone, will sync','err'); return;
+    }
+  }
+  setStatus('Could not sync - your changes are saved locally','err');
+}
 </script>
 </body>
 </html>
