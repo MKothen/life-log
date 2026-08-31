@@ -398,6 +398,22 @@ input[type=password]{
     <div id="todoList"></div>
   </div>
 
+  <div id="sweep" hidden class="sweepwrap">
+    <div class="card sweepcard">
+      <div class="weekhead"><span class="t">Someday is over budget</span>
+                            <span class="c" id="sweepCount"></span></div>
+      <div id="sweepBody" style="padding:4px 14px 10px"></div>
+      <div class="sweepacts">
+        <button class="submit" id="sweepKeep" style="--accent:var(--blue)">Keep</button>
+        <button class="submit" id="sweepSched" style="--accent:var(--study)">Schedule</button>
+        <button class="submit" id="sweepDel" style="--accent:var(--red)">Delete</button>
+      </div>
+      <div class="weekhead"><span class="c" id="sweepPos"></span>
+                            <button class="hint" id="sweepDismiss"
+                                    style="border:0;background:none;cursor:pointer">Dismiss</button></div>
+    </div>
+  </div>
+
   <!-- Week dots + reminders belong to the daily log, not to todos. -->
   <div id="dailyExtras">
   <div class="week">
@@ -882,7 +898,6 @@ let tstate = {doc:null, sha:null, filt:'all', expanded:null, sweep:null};
  * A later `function` declaration of the same name silently wins by hoisting,
  * so leaving both behind would work by accident and confuse anyone grepping
  * for the definition. */
-function sweepMaybeOpen(){}
 
 function todoBlankDoc(){
   return {version:TODO_VERSION, updated_at:new Date().toISOString(),
@@ -1204,6 +1219,105 @@ function todoDetail(item, doc){
 
   [due, prio, cats, note, del].forEach(el=>box.appendChild(el));
   return box;
+}
+
+/* ===========================================================================
+ * SECTION 4.4 mirror  --  staleness and the SOMEDAY sweep
+ * =========================================================================== */
+
+function todoIsStale(item, today, days){
+  if(!item.reviewed_at) return true;
+  const cutoff = new Date(today + 'T12:00:00');
+  cutoff.setDate(cutoff.getDate() - days);
+  return item.reviewed_at.slice(0,10) < isoOf(cutoff);
+}
+
+function sweepCandidates(doc, today){
+  const days = todoSettings(doc).review_after_days;
+  return (doc.items||[])
+    .filter(i=>todoGroupOf(i,today)==='SOMEDAY' && todoIsStale(i,today,days))
+    .sort((a,b)=>(a.created_at||'').localeCompare(b.created_at||''));
+}
+
+/* BOTH halves are required. A bare count test stays true forever once Max
+ * keeps a backlog he genuinely wants, so it would fire on every tab open
+ * until he learned to dismiss it unread. See spec 4.4. */
+function sweepDue(doc, today){
+  const s = todoSettings(doc);
+  const someday = (doc.items||[]).filter(i=>todoGroupOf(i,today)==='SOMEDAY');
+  if(someday.length <= s.someday_limit) return false;
+  return someday.some(i=>todoIsStale(i, today, s.review_after_days));
+}
+
+function sweepMaybeOpen(){
+  const today = isoOf(new Date());
+  if(!tstate.doc) return;
+  if(localStorage.getItem(TODO_SWEEP) === today) return;   // dismissed today
+  if(!sweepDue(tstate.doc, today)) return;
+  tstate.sweep = {queue: sweepCandidates(tstate.doc, today), at: 0};
+  $('#sweep').hidden = false;
+  sweepRender();
+}
+
+function sweepRender(){
+  const s = tstate.sweep;
+  if(!s || s.at >= s.queue.length){ sweepClose(false); return; }
+  const item = s.queue[s.at];
+  const doc = tstate.doc;
+  const cat = todoCategory(doc, item);
+  const today = isoOf(new Date());
+  const someday = (doc.items||[]).filter(i=>todoGroupOf(i,today)==='SOMEDAY');
+  const born = (item.created_at||'').slice(0,10);
+  const age = Math.max(0, Math.round(
+    (new Date(today+'T12:00:00') - new Date(born+'T12:00:00')) / 864e5));
+
+  $('#sweepCount').textContent = `${someday.length} items, ${s.queue.length} unreviewed`;
+  $('#sweepBody').innerHTML =
+    `<div class="todometa">${cat ? escapeHtml(cat.label) : 'uncategorised'}</div>` +
+    `<div class="todotext" style="font-size:17px;margin:6px 0">${escapeHtml(item.text)}</div>` +
+    `<div class="todometa">captured ${born}, ${age} days ago</div>`;
+  $('#sweepPos').textContent = `${s.at+1} of ${s.queue.length}`;
+}
+
+function sweepAdvance(){ tstate.sweep.at += 1; sweepRender(); }
+
+function sweepClose(dismissed){
+  if(dismissed) localStorage.setItem(TODO_SWEEP, isoOf(new Date()));
+  tstate.sweep = null;
+  $('#sweep').hidden = true;
+  todoRender();
+}
+
+const _sweepKeep = $('#sweepKeep');
+if(_sweepKeep){
+  _sweepKeep.onclick = ()=>{
+    const item = tstate.sweep.queue[tstate.sweep.at];
+    todoQueue({op:'keep', at:new Date().toISOString(), id:item.id});
+    sweepAdvance();
+  };
+  $('#sweepDel').onclick = ()=>{
+    const item = tstate.sweep.queue[tstate.sweep.at];
+    if(!confirm(`Delete "${item.text}"?`)) return;
+    todoQueue({op:'delete', at:new Date().toISOString(), id:item.id});
+    sweepAdvance();
+  };
+  $('#sweepSched').onclick = ()=>{
+    const item = tstate.sweep.queue[tstate.sweep.at];
+    if($('#sweepBody').querySelector('input[type=date]')) return;  // already open
+    const picker = document.createElement('input');
+    picker.type = 'date'; picker.value = isoOf(new Date());
+    picker.style.cssText = 'width:100%;padding:10px;border-radius:10px;margin-top:8px;'
+                         + 'border:1px solid var(--fill);font-size:15px';
+    picker.onchange = ()=>{
+      if(!picker.value) return;
+      todoQueue({op:'edit', at:new Date().toISOString(), id:item.id,
+                 patch:{due:picker.value}});
+      sweepAdvance();
+    };
+    $('#sweepBody').appendChild(picker);
+    picker.focus();
+  };
+  $('#sweepDismiss').onclick = ()=>sweepClose(true);
 }
 
 const _todoAddBtn = $('#todoAdd');
