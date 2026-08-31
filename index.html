@@ -177,10 +177,16 @@ input[type=password]{
            align-items:center;justify-content:center;padding:20px;z-index:50}
 .sweepcard{width:100%;max-width:380px;background:var(--card);border-radius:14px}
 .sweepcard .todotext{color:var(--text)}
-/* A bare <select> ignores the palette and renders as a white pill next to the
-   dark text input. Same treatment as input[type=text] gets. */
-.todocatsel{flex:0 0 auto;border:0;background:var(--fill);color:var(--text);
-            border-radius:10px;padding:10px 8px;font-size:15px;max-width:38%}
+/* Capture bar: category chips on top, input + add below. */
+#todoBar{padding:0 14px 14px}
+#todoCatChips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px}
+#todoCatChips button{flex:1 1 auto;height:32px;border-radius:8px;font-size:13px;
+                     font-weight:600;background:var(--fill);color:var(--label)}
+#todoCatChips button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.todoinputrow{display:flex;gap:8px;align-items:center}
+.todoinputrow input[type=text]{flex:1;min-width:0;padding:10px}
+.todoinputrow .submit{flex:0 0 auto;width:auto;height:44px;margin:0;
+                      padding:0 20px;font-size:22px}
 .sweepacts{display:flex;gap:8px;padding:0 14px 10px}
 .sweepacts .submit{flex:1;margin:0;padding:12px 0}
 </style>
@@ -463,14 +469,19 @@ input[type=password]{
   <div class="inner">
     <p class="status" id="status"></p>
     <button class="submit" id="submitBtn">Log morning</button>
-    <div id="todoBar" hidden style="display:flex;gap:8px;padding:0 14px 14px">
-      <select id="todoCat" class="todocatsel"></select>
-      <input type="text" id="todoText" placeholder="type here..." maxlength="200"
-             autocomplete="off" style="flex:1;min-width:0;border-radius:10px;padding:10px">
-      <!-- width:auto is load-bearing: .submit sets width:100%, which as a
-           flex-basis would let this button eat the whole capture bar. -->
-      <button class="submit" id="todoAdd"
-              style="flex:0 0 auto;width:auto;height:44px;margin:0;padding:0 20px;font-size:22px">+</button>
+    <!-- Category is chips, not a <select>. A native picker anchors itself to
+         the element's position at open time; tapping it dismisses the keyboard,
+         the bar reflows back down, and the popover is left orphaned mid-screen
+         on iOS. Chips have no popover to orphan, and cost one tap not two. -->
+    <div id="todoBar" hidden>
+      <div id="todoCatChips" class="chips"></div>
+      <div class="todoinputrow">
+        <input type="text" id="todoText" placeholder="type here..." maxlength="200"
+               autocomplete="off">
+        <!-- width:auto is load-bearing: .submit sets width:100%, which as a
+             flex-basis would let this button eat the whole capture bar. -->
+        <button class="submit" id="todoAdd">+</button>
+      </div>
     </div>
   </div>
 </div>
@@ -925,7 +936,8 @@ const TODO_CATEGORIES = [
   {id:'personal', label:'Personal', color:'#22c55e', uni:false}
 ];
 
-let tstate = {doc:null, sha:null, filt:'all', expanded:null, sweep:null};
+let tstate = {doc:null, sha:null, filt:'all', expanded:null, sweep:null,
+              captureCat:null};
 
 /* --- forward-declaration stubs -------------------------------------------
  * Tasks 6, 7 and 8 supply the real versions and DELETE the stub they replace.
@@ -1177,23 +1189,39 @@ function todoRow(item, doc){
 /* ---------- capture: one action, structure deferred (spec D6) ---------- */
 
 function todoFillCats(){
-  const sel = $('#todoCat');
-  if(!sel || !tstate.doc) return;
+  const host = $('#todoCatChips');
+  if(!host || !tstate.doc) return;
+  const cats = tstate.doc.categories || [];
+  if(!cats.length) return;
   const last = localStorage.getItem(TODO_CAT);
-  sel.innerHTML = '';
-  (tstate.doc.categories||[]).forEach(c=>{
-    const o = document.createElement('option');
-    o.value = c.id; o.textContent = c.label;
-    sel.appendChild(o);
+  if(!cats.some(c=>c.id===tstate.captureCat)){
+    tstate.captureCat = cats.some(c=>c.id===last) ? last : cats[0].id;
+  }
+  host.innerHTML = '';
+  cats.forEach(c=>{
+    const b = document.createElement('button');
+    b.textContent = c.label;
+    b.setAttribute('aria-pressed', String(tstate.captureCat===c.id));
+    b.style.setProperty('--accent', c.color);
+    /* Keep the keyboard up. Without this the input blurs on tap, the page
+     * reflows, and the bar jumps -- the same class of problem the <select>
+     * had, minus the orphaned popover. click still fires. */
+    b.addEventListener('mousedown', e=>e.preventDefault());
+    b.onclick = ()=>{
+      tstate.captureCat = c.id;
+      localStorage.setItem(TODO_CAT, c.id);
+      todoFillCats();
+    };
+    host.appendChild(b);
   });
-  if(last && [...sel.options].some(o=>o.value===last)) sel.value = last;
 }
 
 function todoAdd(){
   const input = $('#todoText');
   const text = input.value.trim();
   if(!text) return;
-  const cat = $('#todoCat').value;
+  const cat = tstate.captureCat;
+  if(!cat) return;
   localStorage.setItem(TODO_CAT, cat);
   todoQueue({op:'add', at:new Date().toISOString(), item:{
     id: todoId(tstate.doc), text, cat, due:null, prio:2, note:null,
