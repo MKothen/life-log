@@ -139,6 +139,30 @@ input[type=password]{
 .setup code{background:var(--fill);padding:1px 5px;border-radius:5px;font-size:13.5px}
 .setup .submit{margin-top:14px}
 .setup a{color:var(--blue)}
+
+/* todo */
+.todorow{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;
+         border-left:4px solid #c7c7cc;background:#fff;margin:0 0 1px;flex-wrap:wrap}
+.todocheck{border:0;background:none;font-size:20px;line-height:1;padding:2px 4px;
+           min-width:34px;min-height:34px;color:var(--label);cursor:pointer}
+.todobody{flex:1;min-width:0;cursor:pointer}
+.todotext{font-size:15px;word-break:break-word}
+.todometa{font-size:12px;color:var(--label);margin-top:2px}
+.todorow.phigh .todotext{font-weight:600}
+.todorow.plow  .todotext{color:var(--label)}
+.todorow.isdone .todotext{text-decoration:line-through;color:var(--label2)}
+.todoempty{color:var(--label);font-size:14px;text-align:center;padding:24px 20px}
+.tododone{margin-top:14px}
+.tododone summary{font-size:13px;color:var(--label);padding:6px 20px;cursor:pointer}
+.tododetail{flex-basis:100%;display:flex;flex-direction:column;gap:8px;
+            padding:10px 0 4px;border-top:1px solid var(--fill);margin-top:8px}
+.tododetail input{border-radius:10px;padding:10px;width:100%;box-sizing:border-box;
+                  border:1px solid var(--fill);font-size:15px}
+.sweepwrap{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;
+           align-items:center;justify-content:center;padding:20px;z-index:50}
+.sweepcard{width:100%;max-width:380px;background:#fff;border-radius:14px}
+.sweepacts{display:flex;gap:8px;padding:0 14px 10px}
+.sweepacts .submit{flex:1;margin:0;padding:12px 0}
 </style>
 </head>
 <body>
@@ -858,7 +882,6 @@ let tstate = {doc:null, sha:null, filt:'all', expanded:null, sweep:null};
  * A later `function` declaration of the same name silently wins by hoisting,
  * so leaving both behind would work by accident and confuse anyone grepping
  * for the definition. */
-function todoRender(){}
 function todoFillCats(){}
 function todoDetail(){ return document.createElement('div'); }
 function sweepMaybeOpen(){}
@@ -970,6 +993,147 @@ async function todoSave(){
     }
   }
   setStatus('Could not sync - your changes are saved locally','err');
+}
+
+/* ===========================================================================
+ * SECTION 4 CONTRACT  --  mirror of vault_infra/life/todo.py
+ * Change one, change the other. Spec section 4 is the written contract.
+ * =========================================================================== */
+
+const TODO_GROUPS = ['OVERDUE','TODAY','LATER','SOMEDAY'];
+
+function todoGroupOf(item, today){
+  if(item.done) return 'DONE';
+  if(!item.due) return 'SOMEDAY';
+  if(item.due < today) return 'OVERDUE';
+  if(item.due === today) return 'TODAY';
+  return 'LATER';
+}
+
+/* Successive stable sorts, least significant key first -- the same technique
+ * the Python side uses to express a mixed asc/desc ordering. Array.prototype
+ * .sort is stable in every browser this app targets. */
+function todoSortGroup(items, group){
+  const out = items.slice();
+  if(group==='DONE'){
+    out.sort((a,b)=>(b.done_at||'').localeCompare(a.done_at||''));
+    return out;
+  }
+  if(group==='SOMEDAY'){
+    out.sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||''));
+    out.sort((a,b)=>(a.prio||2)-(b.prio||2));
+    return out;
+  }
+  out.sort((a,b)=>(a.created_at||'').localeCompare(b.created_at||''));
+  out.sort((a,b)=>(a.due||'').localeCompare(b.due||''));
+  out.sort((a,b)=>(a.prio||2)-(b.prio||2));
+  return out;
+}
+
+function todoCategory(doc, item){
+  return (doc.categories||[]).find(c=>c.id===item.cat) || null;
+}
+function todoIsUni(doc, item){
+  const c = todoCategory(doc, item);
+  return !!(c && c.uni);
+}
+
+function todoVisible(doc, today, filt){
+  let items = (doc.items||[]).slice();
+  if(filt==='uni')     items = items.filter(i=>todoIsUni(doc,i));
+  if(filt==='non-uni') items = items.filter(i=>!todoIsUni(doc,i));
+  const buckets = {OVERDUE:[],TODAY:[],LATER:[],SOMEDAY:[],DONE:[]};
+  items.forEach(i=>buckets[todoGroupOf(i, today)].push(i));
+  Object.keys(buckets).forEach(g=>{buckets[g]=todoSortGroup(buckets[g], g);});
+  return buckets;
+}
+
+/* ---------- rendering ---------- */
+
+const PRIO_MARK = {1:'!', 2:'', 3:'v'};
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function todoRender(){
+  const doc = tstate.doc; if(!doc) return;
+  const today = isoOf(new Date());
+  const buckets = todoVisible(doc, today, tstate.filt);
+  const host = $('#todoList');
+  host.innerHTML = '';
+
+  TODO_GROUPS.forEach(g=>{
+    if(!buckets[g].length) return;
+    const h = document.createElement('div');
+    h.className = 'weekhead';
+    h.innerHTML = `<span class="t">${g}</span>`;
+    host.appendChild(h);
+    buckets[g].forEach(item=>host.appendChild(todoRow(item, doc)));
+  });
+
+  if(buckets.DONE.length){
+    const d = document.createElement('details');
+    d.className = 'tododone';
+    d.innerHTML = `<summary>Done (${buckets.DONE.length})</summary>`;
+    buckets.DONE.forEach(item=>d.appendChild(todoRow(item, doc)));
+    host.appendChild(d);
+  }
+
+  if(!doc.items || !doc.items.length){
+    const empty = document.createElement('p');
+    empty.className = 'todoempty';
+    empty.textContent = 'Nothing yet. Type below to add something.';
+    host.appendChild(empty);
+  }
+}
+
+function todoRow(item, doc){
+  const cat = todoCategory(doc, item);
+  const row = document.createElement('div');
+  row.className = 'todorow' + (item.done ? ' isdone' : '') +
+                  (item.prio===1 ? ' phigh' : '') + (item.prio===3 ? ' plow' : '');
+  row.style.borderLeftColor = cat ? cat.color : '#c7c7cc';   // dangling: neutral grey
+
+  const circle = document.createElement('button');
+  circle.className = 'todocheck';
+  circle.setAttribute('aria-label', item.done ? 'Mark not done' : 'Mark done');
+  circle.textContent = item.done ? '●' : '○';
+  circle.onclick = e=>{
+    e.stopPropagation();
+    todoQueue({op:'toggle', at:new Date().toISOString(), id:item.id,
+               done:!item.done, done_at:item.done ? null : new Date().toISOString()});
+  };
+
+  const body = document.createElement('div');
+  body.className = 'todobody';
+  const mark = PRIO_MARK[item.prio||2] || '';
+  body.innerHTML =
+    `<div class="todotext">${mark ? `<b>${mark}</b> ` : ''}${escapeHtml(item.text)}</div>` +
+    `<div class="todometa">${cat ? escapeHtml(cat.label) : 'uncategorised'}` +
+    `${item.due ? ' &middot; ' + item.due : ''}</div>`;
+  body.onclick = ()=>{
+    tstate.expanded = (tstate.expanded===item.id) ? null : item.id;
+    todoRender();
+  };
+
+  row.appendChild(circle);
+  row.appendChild(body);
+  if(tstate.expanded===item.id) row.appendChild(todoDetail(item, doc));
+  return row;
+}
+
+const _todoFilter = $('#todoFilter');
+if(_todoFilter){
+  _todoFilter.querySelectorAll('button').forEach(b=>{
+    b.onclick = ()=>{
+      tstate.filt = b.dataset.filt;
+      _todoFilter.querySelectorAll('button')
+        .forEach(x=>x.setAttribute('aria-selected', String(x===b)));
+      todoRender();
+    };
+  });
 }
 </script>
 </body>
