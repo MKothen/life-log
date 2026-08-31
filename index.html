@@ -900,13 +900,14 @@ const TODO_SWEEP = 'lifelog.todosweep';  // local date the sweep was dismissed
 
 const TODO_VERSION = 1;
 const TODO_SETTINGS = {someday_limit: 10, review_after_days: 14};
+/* Chosen by Max 2026-08-31. The three uni categories sit in the cool-blue
+ * family and personal is green, so the colour bar encodes the uni/non-uni
+ * split as well as the category. Mirror of DEFAULT_CATEGORIES in todo.py. */
 const TODO_CATEGORIES = [
-  {id:'thesis',    label:'Thesis',    color:'#3b82f6', uni:true},
-  {id:'neuroai',   label:'NeuroAI',   color:'#6366f1', uni:true},
-  {id:'uni-admin', label:'Uni admin', color:'#14b8a6', uni:true},
-  {id:'kitchen',   label:'Kitchen',   color:'#f59e0b', uni:false},
-  {id:'home',      label:'Home',      color:'#22c55e', uni:false},
-  {id:'personal',  label:'Personal',  color:'#94a3b8', uni:false}
+  {id:'lab',      label:'Lab',      color:'#3b82f6', uni:true},
+  {id:'neuroai',  label:'NeuroAI',  color:'#6366f1', uni:true},
+  {id:'courses',  label:'Courses',  color:'#14b8a6', uni:true},
+  {id:'personal', label:'Personal', color:'#22c55e', uni:false}
 ];
 
 let tstate = {doc:null, sha:null, filt:'all', expanded:null, sweep:null};
