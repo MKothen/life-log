@@ -158,6 +158,11 @@ input[type=password]{
             padding:10px 0 4px;border-top:1px solid var(--fill);margin-top:8px}
 .tododetail input{border-radius:10px;padding:10px;width:100%;box-sizing:border-box;
                   border:1px solid var(--fill);font-size:15px}
+/* Six categories will not fit on one phone-width row at flex:1; let them wrap
+   and size to their label instead of being squeezed off the edge. */
+.tododetail .chips{flex-wrap:wrap;gap:6px}
+.tododetail .chips button{flex:0 1 auto;padding:0 12px}
+.tododetail .seg{margin:0}
 .sweepwrap{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;
            align-items:center;justify-content:center;padding:20px;z-index:50}
 .sweepcard{width:100%;max-width:380px;background:#fff;border-radius:14px}
@@ -400,8 +405,8 @@ input[type=password]{
 
   <div id="sweep" hidden class="sweepwrap">
     <div class="card sweepcard">
-      <div class="weekhead"><span class="t">Someday is over budget</span>
-                            <span class="c" id="sweepCount"></span></div>
+      <div class="weekhead"><span class="t">Someday is over budget</span></div>
+      <p class="c" id="sweepCount" style="margin:0;padding:0 14px 6px;font-size:13px"></p>
       <div id="sweepBody" style="padding:4px 14px 10px"></div>
       <div class="sweepacts">
         <button class="submit" id="sweepKeep" style="--accent:var(--blue)">Keep</button>
@@ -447,7 +452,10 @@ input[type=password]{
       <select id="todoCat" style="flex:0 0 auto;border-radius:10px;padding:10px"></select>
       <input type="text" id="todoText" placeholder="type here..." maxlength="200"
              autocomplete="off" style="flex:1;min-width:0;border-radius:10px;padding:10px">
-      <button class="submit" id="todoAdd" style="flex:0 0 auto;margin:0;padding:10px 16px">+</button>
+      <!-- width:auto is load-bearing: .submit sets width:100%, which as a
+           flex-basis would let this button eat the whole capture bar. -->
+      <button class="submit" id="todoAdd"
+              style="flex:0 0 auto;width:auto;height:44px;margin:0;padding:0 20px;font-size:22px">+</button>
     </div>
   </div>
 </div>
@@ -746,7 +754,17 @@ $('#tabMorning').onclick=async()=>{slot='morning';tab='morning';paint();await pr
 $('#tabEvening').onclick=async()=>{slot='evening';tab='evening';paint();await prefill();};
 $('#tabTodo').onclick=async()=>{
   tab='todo'; paint();
-  await todoLoad();
+  /* todoLoad rethrows on 401/403 so a dead token still routes to setup, the
+   * same contract boot() honours. Without this catch the tab renders blank
+   * and says nothing. A network failure is NOT rethrown - it falls through to
+   * the cached document plus queued ops, which is the offline path. */
+  try{
+    await todoLoad();
+  }catch(e){
+    if(e.status===401||e.status===403){
+      localStorage.removeItem(TOKEN_KEY); showSetup(); return;
+    }
+  }
   todoFillCats();
   todoRender();
   sweepMaybeOpen();
@@ -1063,7 +1081,10 @@ function todoVisible(doc, today, filt){
 
 /* ---------- rendering ---------- */
 
-const PRIO_MARK = {1:'!', 2:'', 3:'v'};
+/* Spec 5 writes low as "v" because the CLI column has to stay ASCII. In the
+ * UI a bare "v" in front of task text reads as a typo, so the marker is a real
+ * down-arrow here. The CLI keeps "v". */
+const PRIO_MARK = {1:'!', 2:'', 3:'↓'};
 
 function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, c =>
@@ -1197,6 +1218,11 @@ function todoDetail(item, doc){
     const b = document.createElement('button');
     b.textContent = c.label;
     b.setAttribute('aria-pressed', String(item.cat===c.id));
+    /* The selected chip is painted with var(--accent) and white text by the
+     * shared .chips rule. Nothing sets --accent inside the detail panel, so
+     * without this the selected chip is white on white and vanishes. Its own
+     * category colour is the right value anyway. */
+    b.style.setProperty('--accent', c.color);
     b.onclick = ()=>todoQueue({op:'edit', at:new Date().toISOString(), id:item.id,
                                patch:{cat:c.id}});
     cats.appendChild(b);
