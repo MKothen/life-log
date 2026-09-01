@@ -2348,6 +2348,10 @@ function rateCard(block, it, future){
     rateMaterialise(block, it);
     rateQueue({op:'edit', block:block, id:it.id, patch:fields});
   };
+  /* The title was the one field with no editor: a typo meant deleting the
+   * activity and typing it again, losing its ratings with it. */
+  plan.appendChild(ratePlanField('What', it.label, 'what you did', 'text',
+    function(v){ if(v) patch({label:v}); }));
   plan.appendChild(rateCatRow(it, function(v){ patch({cat:v}); }));
   plan.appendChild(ratePlanField('At', it.at, '', 'time', function(v){ patch({at:v}); }));
   plan.appendChild(rateDurationRow(it, function(v){ patch({mins:v}); }));
