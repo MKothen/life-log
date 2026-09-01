@@ -49,9 +49,26 @@ button{border:0;background:none;padding:0;cursor:pointer}
 /* The rate bar carries recents + a block picker + the input, roughly twice the
  * height of the daily submit bar, so the scroll floor has to move with it. */
 .wrap.ratetab{padding-bottom:calc(216px + env(safe-area-inset-bottom))}
-header{padding:12px 20px 4px}
-h1{font-size:34px;font-weight:700;letter-spacing:-0.02em;margin:0}
-.subtitle{color:var(--label);font-size:15px;margin:2px 0 0}
+/* The 34px title and the four-across segmented control cost most of a phone
+ * screen before any content. Navigation moved to an edge rail that stays out
+ * of the way; what is left at the top is the date, and only where the view
+ * does not already show one. */
+.topline{padding:10px 20px 0;font-size:13px;color:var(--label2)}
+
+.railhandle{position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:40;
+  width:17px;height:76px;border-radius:0 10px 10px 0;background:var(--fill2);
+  display:flex;align-items:center;justify-content:center;color:var(--label);
+  padding-bottom:env(safe-area-inset-bottom)}
+.railhandle svg{width:12px;height:12px}
+.rail{position:fixed;left:0;top:50%;transform:translate(-108%,-50%);z-index:41;
+  width:180px;padding:8px;border-radius:0 16px 16px 0;background:var(--card);
+  box-shadow:0 8px 30px rgba(0,0,0,0.26);display:flex;flex-direction:column;gap:2px;
+  transition:transform .2s ease}
+.rail.open{transform:translate(0,-50%)}
+.rail button{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:10px;
+  font-size:15px;font-weight:600;color:var(--label);text-align:left}
+.rail button svg{width:18px;height:18px;flex:none}
+.rail button[aria-selected="true"]{background:var(--fill);color:var(--text)}
 
 /* segmented control */
 .seg{display:flex;gap:2px;margin:16px 16px 4px;padding:2px;background:var(--fill);border-radius:9px}
@@ -136,6 +153,9 @@ input[type=password]{
 
 /* setup */
 .setup{padding:8px 20px 40px;max-width:520px;margin:0 auto}
+/* The app's h1 rule went with the header; the setup screen still has one. */
+.setup header{padding:12px 0 2px}
+.setup h1{font-size:30px;font-weight:700;letter-spacing:-0.02em;margin:0}
 .setup h2{font-size:22px;margin:18px 0 6px}
 .setup p{color:var(--label);font-size:15px;line-height:1.45}
 .setup ol{color:var(--label);font-size:15px;line-height:1.5;padding-left:22px}
@@ -216,7 +236,6 @@ input[type=password]{
 .daynav button:disabled{opacity:.3}
 .daynav .lab{flex:1;text-align:center;font-size:16px;font-weight:600}
 .daynav .lab small{display:block;font-weight:400;font-size:12px;color:var(--label2)}
-.modeline{font-size:12px;color:var(--label2);margin:8px 20px 0;line-height:1.4}
 
 .blockhead{display:flex;align-items:center;gap:7px;margin:22px 18px 8px}
 .blockhead svg{width:16px;height:16px;flex:none}
@@ -227,6 +246,12 @@ input[type=password]{
 .slot{display:flex;gap:10px;align-items:flex-start;padding:0 16px;margin-bottom:8px}
 .slot .gut{flex:none;width:42px;padding-top:13px;text-align:right;font-size:12px;
   color:var(--label2);font-variant-numeric:tabular-nums;letter-spacing:-0.01em}
+/* A block where nothing carries a time has nothing to put in the gutter, and an
+ * empty 52px column down the left of every card is the single biggest waste of
+ * width on the screen. */
+.droplist.notimes .slot{gap:0}
+.droplist.notimes .slot .gut{display:none}
+.droplist.notimes + .nothing{padding-left:0}
 .slot .body{flex:1;min-width:0}
 .gap .body{padding:6px 2px;font-size:13px;color:var(--label2)}
 
@@ -247,8 +272,10 @@ input[type=password]{
   padding:3px 7px;border-radius:6px;font-variant-numeric:tabular-nums}
 .ecard .sc{margin-left:auto;font-size:12px;color:var(--label);font-variant-numeric:tabular-nums}
 .ecard .sc b{font-weight:700;color:var(--text)}
-.ecard .title{font-size:16px;font-weight:600;letter-spacing:-0.01em;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Two lines, then clip. Truncating at one line cut his own words off mid
+ * phrase ("Wrote sticky note memos for daily ...") on a real entry. */
+.ecard .title{font-size:16px;font-weight:600;letter-spacing:-0.01em;line-height:1.25;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .ecard .meta{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:5px;
   font-size:12px;color:var(--label)}
 .ecard .meta span{display:inline-flex;align-items:center;gap:4px;min-width:0}
@@ -282,6 +309,8 @@ body.dragging-now{user-select:none;-webkit-user-select:none}
 
 .striprow{margin-top:10px}
 .striprow .lb{display:flex;justify-content:space-between;font-size:12px;color:var(--label);margin-bottom:5px}
+.striprow .anch{display:flex;justify-content:space-between;font-size:10.5px;
+  color:var(--label2);margin-top:4px}
 .strip{display:flex;gap:2px}
 .strip button{flex:1;height:30px;border-radius:6px;background:var(--card);
   font-size:12px;font-variant-numeric:tabular-nums;color:var(--label)}
@@ -332,17 +361,7 @@ body.dragging-now{user-select:none;-webkit-user-select:none}
 
 <!-- ============ APP ============ -->
 <div class="wrap" id="app" hidden>
-  <header>
-    <h1>Log</h1>
-    <p class="subtitle" id="dateLine"></p>
-  </header>
-
-  <div class="seg" role="tablist">
-    <button role="tab" id="tabMorning" aria-selected="true">Morning</button>
-    <button role="tab" id="tabEvening" aria-selected="false">Evening</button>
-    <button role="tab" id="tabTodo" aria-selected="false">Todo</button>
-    <button role="tab" id="tabRate" aria-selected="false">Rate</button>
-  </div>
+  <p class="topline" id="topline"><span id="dateLine"></span></p>
 
   <!-- MORNING -->
   <div id="cardMorning">
@@ -548,14 +567,7 @@ body.dragging-now{user-select:none;-webkit-user-select:none}
       <span class="lab" id="rDayLab"></span>
       <button id="rNext" aria-label="Next day">&rsaquo;</button>
     </div>
-    <p class="modeline" id="rMode"></p>
     <div id="rBlocks"></div>
-    <p style="font-size:13px;color:var(--label2);margin:18px 20px 0;line-height:1.45">
-      Mastery is how much it felt like an accomplishment. Pleasure is how much you
-      enjoyed it. They are rated separately on purpose - the point is to find where
-      they come apart. A block with nothing in it is data, so mark it rather than
-      leaving it blank. There is no repeat button, deliberately: the week is
-      planned as the one you will actually have.</p>
   </div>
 
   <div id="sweep" hidden class="sweepwrap">
@@ -599,6 +611,30 @@ body.dragging-now{user-select:none;-webkit-user-select:none}
 
 </div>
 
+<button class="railhandle" id="railHandle" aria-label="Open navigation">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+       stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+</button>
+
+<nav class="rail" id="rail" role="tablist" aria-label="Views">
+  <button role="tab" id="tabMorning" aria-selected="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+         stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="14" r="3.2"/><path d="M12 6.6V4.5M6.2 10.2 4.8 8.8M17.8 10.2l1.4-1.4M3.5 14h2m13 0h2M3 18.5h18"/></svg>
+    <span>Morning</span></button>
+  <button role="tab" id="tabEvening" aria-selected="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+         stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+    <span>Evening</span></button>
+  <button role="tab" id="tabTodo" aria-selected="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+         stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5 6 8.5 9.5 5M4 13.5 6 15.5 9.5 12M4 20.5 6 22.5 9.5 19M13 6.5h7M13 13.5h7M13 20.5h7"/></svg>
+    <span>Todo</span></button>
+  <button role="tab" id="tabRate" aria-selected="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+         stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/><circle cx="19" cy="19" r="2.4"/></svg>
+    <span>Rate</span></button>
+</nav>
+
 <div class="bar" id="bar" hidden>
   <div class="inner">
     <p class="status" id="status"></p>
@@ -608,7 +644,7 @@ body.dragging-now{user-select:none;-webkit-user-select:none}
          the bar reflows back down, and the popover is left orphaned mid-screen
          on iOS. Chips have no popover to orphan, and cost one tap not two. -->
     <div id="rateBar" hidden>
-      <div class="recents" id="rRecents"></div>
+      <div class="recents" id="rRecents" hidden></div>
       <div class="blockpick" id="rBlockPick">
         <button data-b="morning" aria-selected="true">Morning</button>
         <button data-b="afternoon" aria-selected="false">Afternoon</button>
@@ -776,6 +812,9 @@ function paint(){
   $('#submitBtn').hidden   = tab==='todo' || tab==='rate';
   $('#todoBar').hidden     = tab!=='todo';
   $('#rateBar').hidden     = tab!=='rate';
+  /* Rate carries its own day navigator, so a second date line above it is
+   * duplication in the space the header was just removed to free. */
+  $('#topline').hidden     = tab==='rate' || tab==='todo';
   $('#app').classList.toggle('ratetab', tab==='rate');
 
   const d=logDate(slot);
@@ -1962,9 +2001,13 @@ function rateMaterialise(block, it){
 function rateDayLabel(d){
   const dt = new Date(d+'T12:00:00');
   const today = isoOf(new Date());
+  /* Carries the mode too, now that the explaining line is gone: anything past
+   * tomorrow says "planning", which is the only cue that the rating strips are
+   * missing on purpose. */
   const rel = d===today ? 'Today'
             : (d===addDays(today,-1) ? 'Yesterday'
-            : (d===addDays(today, 1) ? 'Tomorrow' : ''));
+            : (d===addDays(today, 1) ? 'Tomorrow'
+            : (d > today ? 'Planning' : '')));
   const main = dt.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
   return {main:main, sub:rel};
 }
@@ -1996,6 +2039,14 @@ function rateStrip(kind, val, accent, onPick){
     strip.appendChild(b);
   }
   wrap.appendChild(strip);
+  /* The paragraph that used to define the two axes is gone; two words at each
+   * end of the scale carry the same calibration without the wall of text. */
+  const anch = document.createElement('div');
+  anch.className = 'anch';
+  anch.innerHTML = kind === 'm'
+    ? '<span>no achievement</span><span>real accomplishment</span>'
+    : '<span>no enjoyment</span><span>loved it</span>';
+  wrap.appendChild(anch);
   return wrap;
 }
 
@@ -2083,9 +2134,6 @@ function rateRender(){
   document.querySelector('#rPrev').disabled = rstate.date <= rateFloor();
 
   const future = rateIsFuture();
-  document.querySelector('#rMode').textContent = future
-    ? 'Planning ahead. Mastery and pleasure open on the day itself.'
-    : 'Drag the handle to reorder, or across a heading to move block.';
   /* The same field captures a plan and a record; the tense should say which. */
   document.querySelector('#rText').placeholder =
     future ? 'what will you do...' : 'what did you do...';
@@ -2109,7 +2157,10 @@ function rateRender(){
     const list = document.createElement('div');
     list.className = 'droplist';
     list.dataset.block = block;
-    rateSlots(block, items).forEach(function(slot){
+    const slots = rateSlots(block, items);
+    /* The gutter earns its width only when something in the block has a time. */
+    if(!items.some(i=>rateHm(i.at) !== null)) list.classList.add('notimes');
+    slots.forEach(function(slot){
       list.appendChild(slot.gap ? rateGapRow(slot.at) : rateSlotRow(block, slot, future));
     });
     host.appendChild(list);
@@ -2374,16 +2425,27 @@ function ratePushMemory(key, value){
   localStorage.setItem(key, JSON.stringify(cur.slice(0, RATE_RECENT_MAX)));
 }
 
+/* Suggestions are shown only while the field is actually in use. A permanent
+ * strip of them ate a row of the screen on every view of the tab and, on a
+ * phone, only ever showed the first two and a half. */
 function rateRenderRecents(){
   const host = document.querySelector('#rRecents');
-  if(!host) return;
+  const field = document.querySelector('#rText');
+  if(!host || !field) return;
+  const typed = field.value.trim().toLowerCase();
+  const shown = rateRecents()
+    .filter(l => !typed || l.toLowerCase().includes(typed))
+    .slice(0, 12);
   host.innerHTML = '';
-  rateRecents().slice(0,12).forEach(function(l){
+  shown.forEach(function(l){
     const b = document.createElement('button');
     b.textContent = l;
-    b.onclick = function(){ rateAdd(l); };
+    /* pointerdown, not click: on iOS the field blurs first and the row is
+     * already hidden by the time a click would land. */
+    b.addEventListener('pointerdown', function(e){ e.preventDefault(); rateAdd(l); });
     host.appendChild(b);
   });
+  host.hidden = !shown.length || document.activeElement !== field;
 }
 
 const rateBlockNow = function(){
@@ -2430,8 +2492,51 @@ document.querySelector('#rAdd').onclick  = function(){ rateAdd(); };
 document.querySelector('#rText').addEventListener('keydown', function(e){
   if(e.key==='Enter') rateAdd();
 });
+document.querySelector('#rText').addEventListener('focus', rateRenderRecents);
+document.querySelector('#rText').addEventListener('input', rateRenderRecents);
+document.querySelector('#rText').addEventListener('blur', function(){
+  setTimeout(function(){ document.querySelector('#rRecents').hidden = true; }, 120);
+});
 document.querySelector('#rBlockPick').querySelectorAll('button').forEach(function(b){
   b.onclick = function(){ rateSetAddBlock(b.dataset.b); };
+});
+
+/* ---------------------------------------------------------------------------
+ * RAIL  --  the four views, out of the way
+ *
+ * Replaces the segmented control, which cost a full row of a phone screen at
+ * all times to show three destinations he was not on. It opens on a tap of the
+ * edge handle, closes on a selection, and closes itself after a few seconds of
+ * being ignored -- the timer restarts on every touch inside it, so it never
+ * shuts under his finger.
+ * ------------------------------------------------------------------------- */
+const RAIL_IDLE_MS = 4000;
+let railTimer = null;
+
+function railOpen(){
+  $('#rail').classList.add('open');
+  $('#railHandle').hidden = true;
+  railPoke();
+}
+function railClose(){
+  $('#rail').classList.remove('open');
+  $('#railHandle').hidden = false;
+  clearTimeout(railTimer);
+  railTimer = null;
+}
+function railPoke(){
+  clearTimeout(railTimer);
+  railTimer = setTimeout(railClose, RAIL_IDLE_MS);
+}
+
+$('#railHandle').onclick = railOpen;
+/* Capture, so the countdown is cancelled before the tab handler runs and the
+ * rail is already closing while the new view paints. */
+$('#rail').addEventListener('click', function(e){
+  if(e.target.closest('button')) railClose();
+}, true);
+['pointerdown','pointermove'].forEach(function(evt){
+  $('#rail').addEventListener(evt, function(){ if(railTimer) railPoke(); });
 });
 
 document.querySelector('#tabRate').onclick = async function(){
