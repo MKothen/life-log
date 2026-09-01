@@ -1529,9 +1529,19 @@ const RATE_RECENT  = 'lifelog.raterecent';  // device-local recent activity labe
 const RATE_CAL     = 'lifelog.ratecal';     // cached calendar/upcoming.json
 const RATE_RECENT_MAX = 24;
 
-/* The five weeks between the two appointments, 2026-09-01 -> 2026-10-06. */
+/* The five weeks between the two appointments, 2026-09-01 -> 2026-10-06.
+ * These describe the window; they are NOT the navigation limits. Flooring the
+ * day picker at RATE_START disabled both arrows on 1 September -- the window
+ * opened on the same day it started -- so the control read as broken on the
+ * one day it most needed to look alive. */
 const RATE_START = '2026-09-01';
 const RATE_END   = '2026-10-06';
+
+/* How far back the picker will go, counted from today rather than from the
+ * window, so there is always somewhere to move and a missed day can still be
+ * filled in later. */
+const RATE_BACKFILL_DAYS = 30;
+const rateFloor = () => addDays(isoOf(new Date()), -RATE_BACKFILL_DAYS);
 
 let rstate = {date:null, doc:null, sha:null, expanded:null,
               addBlock:null, cal:null};
@@ -1802,7 +1812,7 @@ function rateRender(){
   document.querySelector('#rDayLab').innerHTML =
     escapeHtml(lab.main) + '<small>' + escapeHtml(lab.sub||'') + '</small>';
   document.querySelector('#rNext').disabled = rstate.date >= isoOf(new Date());
-  document.querySelector('#rPrev').disabled = rstate.date <= RATE_START;
+  document.querySelector('#rPrev').disabled = rstate.date <= rateFloor();
 
   host.innerHTML = '';
   RATE_BLOCKS.forEach(function(block){
@@ -1941,8 +1951,8 @@ function rateSetAddBlock(b){
 }
 
 async function rateGoto(date){
-  if(date < RATE_START) return;
-  if(date > isoOf(new Date())) return;
+  if(date < rateFloor()) return;
+  if(date > isoOf(new Date())) return;   // no rating the future
   rstate.expanded = null;
   await rateLoad(date);
   rateRender();
