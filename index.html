@@ -194,44 +194,107 @@ input[type=password]{
 .sweepacts .submit{flex:1;margin:0;padding:12px 0}
 
 /* ---------------------------------------------------------------------------
- * RATE  --  mastery / pleasure block ratings
+ * RATE  --  plan and rate the day in three blocks
  * Spec: 02_Areas/infrastructure/2026-09-01_life-log-mastery-pleasure-design.md
  * ------------------------------------------------------------------------- */
+:root{
+  --cat-lab:#3B82F6; --cat-uni:#6366F1; --cat-work:#F59E0B;
+  --cat-personal:#22C55E; --cat-wellness:#EC4899; --cat-social:#A855F7;
+  --tint:14%; --tint2:22%;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --cat-lab:#60A5FA; --cat-uni:#818CF8; --cat-work:#FBBF24;
+    --cat-personal:#4ADE80; --cat-wellness:#F472B6; --cat-social:#C084FC;
+    --tint:20%; --tint2:30%;
+  }
+}
+
 .daynav{display:flex;align-items:center;gap:10px;margin:14px 16px 0}
 .daynav button{width:34px;height:34px;border-radius:9px;background:var(--fill);
   color:var(--label);font-size:17px;font-weight:600;line-height:34px;text-align:center}
 .daynav button:disabled{opacity:.3}
-.daynav .lab{flex:1;text-align:center;font-size:15px;font-weight:600}
+.daynav .lab{flex:1;text-align:center;font-size:16px;font-weight:600}
 .daynav .lab small{display:block;font-weight:400;font-size:12px;color:var(--label2)}
+.modeline{font-size:12px;color:var(--label2);margin:8px 20px 0;line-height:1.4}
 
-.blockhead{display:flex;align-items:baseline;gap:8px;margin:22px 20px 7px}
-.blockhead .t{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--label)}
+.blockhead{display:flex;align-items:center;gap:7px;margin:22px 18px 8px}
+.blockhead svg{width:16px;height:16px;flex:none}
+.blockhead .t{font-size:17px;font-weight:600;letter-spacing:-0.01em}
 .blockhead .c{margin-left:auto;font-size:13px;color:var(--label2);font-variant-numeric:tabular-nums}
 
-.act{padding:12px 16px;border-top:1px solid var(--sep);display:block;width:100%;text-align:left}
-.act:first-child{border-top:0}
-.acthead{display:flex;align-items:center;gap:8px}
-.acthead .nm{flex:1;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.acthead .sc{font-size:13px;font-variant-numeric:tabular-nums;color:var(--label2);flex:none}
-.acthead .sc b{font-weight:600;color:var(--text)}
-.act.void .nm{text-decoration:line-through;color:var(--label2)}
-.act .src{font-size:11px;color:var(--label2);flex:none;padding:1px 6px;border-radius:5px;background:var(--fill)}
+/* one row = [time gutter][card or gap] */
+.slot{display:flex;gap:10px;align-items:flex-start;padding:0 16px;margin-bottom:8px}
+.slot .gut{flex:none;width:42px;padding-top:13px;text-align:right;font-size:12px;
+  color:var(--label2);font-variant-numeric:tabular-nums;letter-spacing:-0.01em}
+.slot .body{flex:1;min-width:0}
+.gap .body{padding:6px 2px;font-size:13px;color:var(--label2)}
+
+.ecard{
+  --c:var(--cat-personal);
+  background:color-mix(in srgb, var(--c) var(--tint), var(--card));
+  border-radius:14px;padding:11px 13px 12px;position:relative;
+}
+.ecard.void{opacity:.55}
+.ecard.void .title{text-decoration:line-through}
+.ecard .top{display:flex;align-items:center;gap:6px;margin-bottom:5px;padding-right:26px}
+.ecard .chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;
+  color:var(--c);background:color-mix(in srgb, var(--c) 18%, transparent);
+  padding:3px 7px;border-radius:6px;white-space:nowrap}
+.ecard .chip svg{width:11px;height:11px}
+.ecard .dur{font-size:11px;font-weight:700;color:var(--c);
+  background:color-mix(in srgb, var(--c) var(--tint2), transparent);
+  padding:3px 7px;border-radius:6px;font-variant-numeric:tabular-nums}
+.ecard .sc{margin-left:auto;font-size:12px;color:var(--label);font-variant-numeric:tabular-nums}
+.ecard .sc b{font-weight:700;color:var(--text)}
+.ecard .title{font-size:16px;font-weight:600;letter-spacing:-0.01em;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ecard .meta{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:5px;
+  font-size:12px;color:var(--label)}
+.ecard .meta span{display:inline-flex;align-items:center;gap:4px;min-width:0}
+.ecard .meta svg{width:11px;height:11px;flex:none;opacity:.75}
+.ecard .meta em{font-style:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.grip{position:absolute;top:2px;right:2px;width:32px;height:34px;display:flex;
+  align-items:center;justify-content:center;touch-action:none;cursor:grab;opacity:.3;
+  color:var(--c)}
+.grip svg{fill:currentColor}
+.ecard.dragging{opacity:.9;box-shadow:0 8px 22px rgba(0,0,0,0.22);transform:scale(1.015)}
+body.dragging-now{user-select:none;-webkit-user-select:none}
+
+/* expanded editor */
+.planbox{margin-top:11px;padding-top:10px;border-top:1px solid color-mix(in srgb, var(--c) 30%, transparent)}
+.planfield{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.planfield .pl{flex:none;width:46px;font-size:12px;color:var(--label)}
+.planfield input{flex:1;min-width:0;padding:7px 9px;border-radius:8px;font-size:14px;
+  border:1px solid color-mix(in srgb, var(--c) 34%, transparent);
+  background:var(--card);color:var(--text)}
+.planchips{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0}
+.planchips::-webkit-scrollbar{display:none}
+.planchips button{flex:none;padding:5px 9px;border-radius:7px;font-size:12px;
+  background:var(--card);color:var(--label);white-space:nowrap}
+.planchips button[aria-pressed="true"]{background:var(--c);color:#fff;font-weight:600}
+.catrow{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;margin-top:2px}
+.catrow::-webkit-scrollbar{display:none}
+.catrow button{flex:none;padding:5px 10px;border-radius:7px;font-size:12px;font-weight:600;
+  background:var(--card);color:var(--label);white-space:nowrap}
+.catrow button[aria-pressed="true"]{color:#fff}
 
 .striprow{margin-top:10px}
 .striprow .lb{display:flex;justify-content:space-between;font-size:12px;color:var(--label);margin-bottom:5px}
 .strip{display:flex;gap:2px}
-.strip button{flex:1;height:30px;border-radius:6px;background:var(--fill);
+.strip button{flex:1;height:30px;border-radius:6px;background:var(--card);
   font-size:12px;font-variant-numeric:tabular-nums;color:var(--label)}
 .strip button[aria-pressed="true"]{background:var(--accent);color:#fff;font-weight:600}
-.actacts{display:flex;gap:8px;margin-top:12px}
-.actacts button{flex:1;padding:8px 0;border-radius:8px;background:var(--fill);
+.actacts{display:flex;gap:8px;margin-top:11px}
+.actacts button{flex:1;padding:8px 0;border-radius:8px;background:var(--card);
   font-size:13px;font-weight:600;color:var(--label)}
 .actacts button.on{background:var(--fill2);color:var(--text)}
 .actacts button.del{color:var(--red)}
 
-.nothing{padding:12px 16px;border-top:1px solid var(--sep);display:flex;align-items:center;gap:8px}
-.nothing .nm{flex:1;font-size:15px;color:var(--label)}
-.nothing button{padding:6px 12px;border-radius:7px;background:var(--fill);font-size:13px;
+.nothing{display:flex;align-items:center;gap:8px;margin:0 16px 8px;padding-left:52px}
+.nothing .nm{flex:1;font-size:13px;color:var(--label2)}
+.nothing button{padding:5px 11px;border-radius:7px;background:var(--fill);font-size:12px;
   font-weight:600;color:var(--label)}
 .nothing button[aria-pressed="true"]{background:var(--stress);color:#fff}
 
@@ -485,12 +548,14 @@ input[type=password]{
       <span class="lab" id="rDayLab"></span>
       <button id="rNext" aria-label="Next day">&rsaquo;</button>
     </div>
+    <p class="modeline" id="rMode"></p>
     <div id="rBlocks"></div>
-    <p style="font-size:13px;color:var(--label2);margin:16px 20px 0;line-height:1.45">
+    <p style="font-size:13px;color:var(--label2);margin:18px 20px 0;line-height:1.45">
       Mastery is how much it felt like an accomplishment. Pleasure is how much you
       enjoyed it. They are rated separately on purpose - the point is to find where
       they come apart. A block with nothing in it is data, so mark it rather than
-      leaving it blank.</p>
+      leaving it blank. There is no repeat button, deliberately: the week is
+      planned as the one you will actually have.</p>
   </div>
 
   <div id="sweep" hidden class="sweepwrap">
@@ -1526,6 +1591,8 @@ const RATE_LABEL   = {morning:'Morning', afternoon:'Afternoon', evening:'Evening
 const RATE_OPS     = 'lifelog.rateops';     // pending operations, all dates
 const RATE_CACHE   = 'lifelog.ratedays';    // {date:{doc,sha}} last server state
 const RATE_RECENT  = 'lifelog.raterecent';  // device-local recent activity labels
+const RATE_PLACES  = 'lifelog.rateplaces';  // device-local remembered places
+const RATE_PEOPLE  = 'lifelog.ratepeople';  // device-local remembered people
 const RATE_CAL     = 'lifelog.ratecal';     // cached calendar/upcoming.json
 const RATE_RECENT_MAX = 24;
 
@@ -1541,7 +1608,14 @@ const RATE_END   = '2026-10-06';
  * window, so there is always somewhere to move and a missed day can still be
  * filled in later. */
 const RATE_BACKFILL_DAYS = 30;
-const rateFloor = () => addDays(isoOf(new Date()), -RATE_BACKFILL_DAYS);
+
+/* Planning ahead is the other half of the exercise -- the psychologist's
+ * Activity Scheduling Form is prospective -- so the picker reaches forward as
+ * well. Rating does not: mastery and pleasure only appear once the day has
+ * arrived, because there is no such thing as how much you enjoyed Thursday. */
+const RATE_PLAN_AHEAD_DAYS = 30;
+const rateFloor   = () => addDays(isoOf(new Date()), -RATE_BACKFILL_DAYS);
+const rateCeiling = () => addDays(isoOf(new Date()),  RATE_PLAN_AHEAD_DAYS);
 
 let rstate = {date:null, doc:null, sha:null, expanded:null,
               addBlock:null, cal:null};
@@ -1610,7 +1684,23 @@ function rateApplyOps(doc, ops){
     }
     if(!blk) continue;
     if(op.op === 'add'){
-      if(!blk.items.some(i=>i.id===op.item.id)) blk.items.push(op.item);
+      /* Position matters now that the list is a plan: a timed item is inserted
+       * where its time says, not appended. Replaying is still a no-op. */
+      if(!blk.items.some(i=>i.id===op.item.id)){
+        const at = (op.index===undefined||op.index===null) ? blk.items.length : op.index;
+        blk.items.splice(Math.max(0, Math.min(at, blk.items.length)), 0, op.item);
+      }
+      continue;
+    }
+    if(op.op === 'move'){
+      /* Absolute destination, never a delta, so a 409 replay lands in the same
+       * place instead of walking the row down the list once per attempt. */
+      const dest = doc.blocks[op.to] || blk;
+      const from = blk.items.findIndex(i=>i.id===op.id);
+      if(from < 0) continue;
+      const moved = blk.items.splice(from, 1)[0];
+      const at = Math.max(0, Math.min(op.index, dest.items.length));
+      dest.items.splice(at, 0, moved);
       continue;
     }
     if(op.op === 'delete'){
@@ -1741,40 +1831,145 @@ const rateCalFor = (date, block) =>
   ((rstate.cal && rstate.cal.events) || []).filter(e=>e.date===date && e.block===block);
 
 /* Doc items first, then calendar events not yet materialised. */
-function rateViewItems(block){
-  const items = rstate.doc.blocks[block].items;
-  const have = new Set(items.map(i=>i.id));
-  /* Also suppress by label. The id is a hash of date|start|label, so moving an
-   * event in the calendar after it has been rated changes that hash and the row
-   * would come back a second time, unrated, beside the one he already rated.
-   * Both sets are built from the full item list, tombstones included, so a
-   * removed calendar row stays removed. */
-  const seen = new Set(items.map(i=>String(i.label).trim().toLowerCase()));
-  const ghosts = rateCalFor(rstate.date, block)
-    .map(e=>({id:rateCalId(e), label:e.label, source:'calendar',
-              start:e.start||null, m:null, p:null, happened:true, ghost:true}))
-    .filter(g=>!have.has(g.id) && !seen.has(String(g.label).trim().toLowerCase()));
-  return items.filter(i=>!i.hidden).concat(ghosts);
+/* ---------- categories ---------- */
+/* Colour has to come from somewhere, and the category is the only field that
+ * carries meaning across days. Aligned with the todo tab's palette where the
+ * two overlap, so lab and personal mean the same colour in both tabs. */
+const RATE_CATS = [
+  {id:'uni',      label:'Uni',      icon:'M3 5l9-3 9 3-9 3-9-3zm2 4.5V15c0 1.5 3.1 3 7 3s7-1.5 7-3V9.5'},
+  {id:'lab',      label:'Lab',      icon:'M9 2v6.2L4.2 17A2 2 0 0 0 6 20h12a2 2 0 0 0 1.8-3L15 8.2V2M8 2h8M7.5 14h9'},
+  {id:'work',     label:'Work',     icon:'M3 8h18v11H3zM8 8V5.5A1.5 1.5 0 0 1 9.5 4h5A1.5 1.5 0 0 1 16 5.5V8'},
+  {id:'personal', label:'Personal', icon:'M3 11l9-7 9 7M6 10v9h12v-9'},
+  {id:'wellness', label:'Wellness', icon:'M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9z'},
+  {id:'social',   label:'Social',   icon:'M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-6 8a6 6 0 0 1 12 0M17 7.5a2.5 2.5 0 1 1 0 5M18 19a5 5 0 0 0-2-4'}
+];
+const RATE_CAT = id => RATE_CATS.find(c=>c.id===id) || RATE_CATS[3];
+const rateCatVar = id => 'var(--cat-' + RATE_CAT(id).id + ')';
+
+/* Calendar rows arrive with a day-type from calendar_patterns.json; reuse it
+ * rather than making him categorise a meeting he did not create here. */
+const RATE_CAL_CAT = {uni:'uni', lab:'lab', shift:'work'};
+
+/* Where the gutter starts and ends for each block, for the "No plans" gaps. */
+const RATE_RANGE = {morning:[6*60, 12*60], afternoon:[12*60, 17*60], evening:[17*60, 23*60]};
+const RATE_GAP_MIN = 30;
+
+/* ---------- small helpers ---------- */
+function rateHm(hhmm){
+  if(!hhmm) return null;
+  const m = /^(\d{1,2}):(\d{2})$/.exec(String(hhmm).trim());
+  return m ? (+m[1])*60 + (+m[2]) : null;
+}
+function rateHhmm(mins){
+  if(mins===null||mins===undefined) return '';
+  const h = Math.floor(mins/60) % 24, m = Math.round(mins)%60;
+  return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+}
+function rateMinsBetween(from, to){
+  const a = rateHm(from), b = rateHm(to);
+  return (a===null || b===null || b<=a) ? null : b-a;
+}
+/* Whole hours read as hours, everything else as minutes. "1h30" is harder to
+ * scan at 11px than "90m", and the duration badge is glanced at, not read. */
+const rateDurLabel = m => (m % 60 === 0) ? (m/60 + 'h') : (m + 'm');
+
+function svg(path, extra){
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" '
+       + 'stroke-linecap="round" stroke-linejoin="round"' + (extra||'') + '><path d="' + path + '"/></svg>';
+}
+const ICON_CLOCK = 'M12 7v5l3 2';
+const ICON_PIN   = 'M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11z';
+const ICON_WITH  = 'M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-6 8a6 6 0 0 1 12 0';
+/* Full inner markup, not a single path: a sun needs a circle plus rays, and
+ * folding the rays into one path drew them as a scribble. */
+const BLOCK_ICON = {
+  morning:   '<circle cx="12" cy="14" r="3.2"/><path d="M12 6.6V4.5M6.2 10.2 4.8 8.8'
+           + 'M17.8 10.2l1.4-1.4M3.5 14h2m13 0h2M3 18.5h18"/>',
+  afternoon: '<circle cx="12" cy="12" r="3.6"/><path d="M12 3.4v2.1M12 18.5v2.1'
+           + 'M3.4 12h2.1m13 0h2.1M6.2 6.2l1.5 1.5m8.6 8.6 1.5 1.5m0-11.6-1.5 1.5'
+           + 'm-8.6 8.6-1.5 1.5"/>',
+  evening:   '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>'
+};
+function svgRaw(inner, extra){
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" '
+       + 'stroke-linecap="round" stroke-linejoin="round"' + (extra||'') + '>' + inner + '</svg>';
 }
 
-/* A ghost has to exist in the document before it can be rated. */
+/* ---------- view assembly ---------- */
+/* Stored order is the source of truth for position, because a drag has to beat
+ * any automatic sort or the gesture fights the list. Times are metadata: a new
+ * timed item is INSERTED at the right spot once, and only a drag moves it after
+ * that. Gaps are therefore emitted only where the sequence really does run
+ * forward, so an out-of-order row never invents a "No plans" that is not there. */
+function rateViewItems(block){
+  const all = rstate.doc.blocks[block].items;
+  const items = all.filter(i=>!i.hidden);
+  const have = new Set(all.map(i=>i.id));
+  /* Also suppress by label. The id is a hash of date|start|label, so moving an
+   * event in the calendar after it has been rated changes that hash and the row
+   * would come back a second time, unrated, beside the one he already rated. */
+  const seen = new Set(all.map(i=>String(i.label).trim().toLowerCase()));
+  const ghosts = rateCalFor(rstate.date, block)
+    .map(e=>({id:rateCalId(e), label:e.label, source:'calendar',
+              cat:RATE_CAL_CAT[e.day_type] || 'uni',
+              at:e.start||null, mins:rateMinsBetween(e.start, e.end),
+              place:null, people:[], m:null, p:null, happened:true, ghost:true}))
+    .filter(g=>!have.has(g.id) && !seen.has(String(g.label).trim().toLowerCase()));
+
+  const out = items.slice();
+  for(const g of ghosts){
+    const idx = g.at ? out.findIndex(i=>i.at && i.at > g.at) : -1;
+    if(idx < 0) out.push(g); else out.splice(idx, 0, g);
+  }
+  return out;
+}
+
+/* [{gap:true, at} | {item, at}] in render order. */
+function rateSlots(block, items){
+  const range = RATE_RANGE[block];
+  const rows = [];
+  let cursor = range[0];
+  let anyTimed = false;
+  for(const it of items){
+    const s = rateHm(it.at);
+    if(s === null){ rows.push({item:it, at:null}); continue; }
+    anyTimed = true;
+    if(s - cursor >= RATE_GAP_MIN) rows.push({gap:true, at:cursor});
+    rows.push({item:it, at:s});
+    cursor = Math.max(cursor, s + (it.mins || 0));
+  }
+  if(anyTimed && range[1] - cursor >= RATE_GAP_MIN) rows.push({gap:true, at:cursor});
+  if(!items.length) rows.push({gap:true, at:range[0]});
+  return rows;
+}
+
+function rateInsertIndex(block, at){
+  const items = rstate.doc.blocks[block].items;
+  if(!at) return items.length;
+  const idx = items.findIndex(i=>i.at && i.at > at);
+  return idx < 0 ? items.length : idx;
+}
+
+/* A ghost has to exist in the document before it can be planned or rated. */
 function rateMaterialise(block, it){
   if(!it.ghost) return;
   const item = Object.assign({}, it);
   delete item.ghost;
-  rateQueue({op:'add', block:block, item:item});
+  rateQueue({op:'add', block:block, item:item, index:rateInsertIndex(block, item.at)});
 }
 
 /* ---------- render ---------- */
 function rateDayLabel(d){
   const dt = new Date(d+'T12:00:00');
   const today = isoOf(new Date());
-  const rel = d===today ? 'Today' : (d===addDays(today,-1) ? 'Yesterday' : '');
-  /* Device locale, to match the daily card's own date line rather than sitting
-   * next to it in a different language. */
+  const rel = d===today ? 'Today'
+            : (d===addDays(today,-1) ? 'Yesterday'
+            : (d===addDays(today, 1) ? 'Tomorrow' : ''));
   const main = dt.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
   return {main:main, sub:rel};
 }
+
+const rateIsFuture = () => rstate.date > isoOf(new Date());
 
 function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, function(c){
@@ -1804,6 +1999,79 @@ function rateStrip(kind, val, accent, onPick){
   return wrap;
 }
 
+function ratePlanField(label, value, placeholder, kind, onCommit, suggestions){
+  const row = document.createElement('div');
+  row.className = 'planfield';
+  const lab = document.createElement('span');
+  lab.className = 'pl';
+  lab.textContent = label;
+  row.appendChild(lab);
+  const input = document.createElement('input');
+  input.type = kind === 'time' ? 'time' : 'text';
+  input.value = value == null ? '' : value;
+  if(placeholder) input.placeholder = placeholder;
+  if(kind === 'text'){ input.autocomplete = 'off'; input.maxLength = 60; }
+  const commit = function(){ onCommit(input.value.trim() || null); };
+  input.onchange = commit;
+  input.onkeydown = function(e){ if(e.key === 'Enter'){ e.preventDefault(); input.blur(); } };
+  input.onclick = function(e){ e.stopPropagation(); };
+  row.appendChild(input);
+  if(suggestions && suggestions.length){
+    const chips = document.createElement('div');
+    chips.className = 'planchips';
+    suggestions.slice(0,6).forEach(function(s){
+      const b = document.createElement('button');
+      b.textContent = s;
+      b.onclick = function(e){ e.stopPropagation(); onCommit(s); };
+      chips.appendChild(b);
+    });
+    row.appendChild(chips);
+  }
+  return row;
+}
+
+function rateDurationRow(item, onPick){
+  const row = document.createElement('div');
+  row.className = 'planfield';
+  const lab = document.createElement('span');
+  lab.className = 'pl';
+  lab.textContent = 'For';
+  row.appendChild(lab);
+  const chips = document.createElement('div');
+  chips.className = 'planchips';
+  [15,30,45,60,90,120,180,240].forEach(function(v){
+    const b = document.createElement('button');
+    b.textContent = rateDurLabel(v);
+    b.setAttribute('aria-pressed', String(item.mins === v));
+    b.onclick = function(e){ e.stopPropagation(); onPick(item.mins === v ? null : v); };
+    chips.appendChild(b);
+  });
+  row.appendChild(chips);
+  return row;
+}
+
+function rateCatRow(item, onPick){
+  const row = document.createElement('div');
+  row.className = 'planfield';
+  const lab = document.createElement('span');
+  lab.className = 'pl';
+  lab.textContent = 'Kind';
+  row.appendChild(lab);
+  const chips = document.createElement('div');
+  chips.className = 'catrow';
+  RATE_CATS.forEach(function(c){
+    const b = document.createElement('button');
+    b.textContent = c.label;
+    const on = (item.cat || 'personal') === c.id;
+    b.setAttribute('aria-pressed', String(on));
+    if(on) b.style.background = 'var(--cat-' + c.id + ')';
+    b.onclick = function(e){ e.stopPropagation(); onPick(c.id); };
+    chips.appendChild(b);
+  });
+  row.appendChild(chips);
+  return row;
+}
+
 function rateRender(){
   const host = document.querySelector('#rBlocks');
   if(!host || !rstate.doc) return;
@@ -1811,8 +2079,16 @@ function rateRender(){
   const lab = rateDayLabel(rstate.date);
   document.querySelector('#rDayLab').innerHTML =
     escapeHtml(lab.main) + '<small>' + escapeHtml(lab.sub||'') + '</small>';
-  document.querySelector('#rNext').disabled = rstate.date >= isoOf(new Date());
+  document.querySelector('#rNext').disabled = rstate.date >= rateCeiling();
   document.querySelector('#rPrev').disabled = rstate.date <= rateFloor();
+
+  const future = rateIsFuture();
+  document.querySelector('#rMode').textContent = future
+    ? 'Planning ahead. Mastery and pleasure open on the day itself.'
+    : 'Drag the handle to reorder, or across a heading to move block.';
+  /* The same field captures a plan and a record; the tense should say which. */
+  document.querySelector('#rText').placeholder =
+    future ? 'what will you do...' : 'what did you do...';
 
   host.innerHTML = '';
   RATE_BLOCKS.forEach(function(block){
@@ -1823,95 +2099,279 @@ function rateRender(){
 
     const head = document.createElement('div');
     head.className = 'blockhead';
-    const count = blk.nothing ? 'nothing' : (items.length ? rated + '/' + items.length : '');
-    head.innerHTML = '<span class="t">' + RATE_LABEL[block] + '</span><span class="c">' + count + '</span>';
+    head.innerHTML = svgRaw(BLOCK_ICON[block], ' style="color:var(--label2)"')
+      + '<span class="t">' + RATE_LABEL[block] + '</span>'
+      + '<span class="c">' + (blk.nothing ? 'nothing'
+          : items.length ? (future ? items.length + ' planned' : rated + '/' + items.length)
+          : '') + '</span>';
     host.appendChild(head);
 
-    const card = document.createElement('div');
-    card.className = 'card';
-
-    items.forEach(function(it){
-      const row = document.createElement('div');
-      row.className = 'act' + (it.happened===false ? ' void' : '');
-
-      const h = document.createElement('div');
-      h.className = 'acthead';
-      const mv = (it.m===null||it.m===undefined) ? '-' : it.m;
-      const pv = (it.p===null||it.p===undefined) ? '-' : it.p;
-      const score = it.happened===false ? 'did not happen'
-                                        : 'M<b>' + mv + '</b> P<b>' + pv + '</b>';
-      /* label and start both originate outside the app -- the calendar export
-       * and free text -- so both go through escapeHtml before interpolation. */
-      h.innerHTML = '<span class="nm">' + (it.start ? escapeHtml(it.start) + '  ' : '') +
-                    escapeHtml(it.label) + '</span>' +
-                    (it.source==='calendar' ? '<span class="src">cal</span>' : '') +
-                    '<span class="sc">' + score + '</span>';
-      h.onclick = function(){
-        rstate.expanded = (rstate.expanded===it.id) ? null : it.id;
-        rateRender();
-      };
-      row.appendChild(h);
-
-      if(rstate.expanded === it.id){
-        if(it.happened !== false){
-          row.appendChild(rateStrip('m', (it.m===undefined?null:it.m), 'var(--study)', function(v){
-            rateMaterialise(block, it);
-            rateQueue({op:'rate', block:block, id:it.id, m:v});
-          }));
-          row.appendChild(rateStrip('p', (it.p===undefined?null:it.p), 'var(--trained)', function(v){
-            rateMaterialise(block, it);
-            rateQueue({op:'rate', block:block, id:it.id, p:v});
-          }));
-        }
-        const acts = document.createElement('div');
-        acts.className = 'actacts';
-
-        const dnh = document.createElement('button');
-        dnh.textContent = it.happened===false ? 'It did happen' : 'Did not happen';
-        if(it.happened===false) dnh.className = 'on';
-        dnh.onclick = function(e){
-          e.stopPropagation();
-          rateMaterialise(block, it);
-          rateQueue({op:'happened', block:block, id:it.id, happened: it.happened===false});
-        };
-        acts.appendChild(dnh);
-
-        const del = document.createElement('button');
-        del.className = 'del'; del.textContent = 'Remove';
-        del.onclick = function(e){
-          e.stopPropagation();
-          rstate.expanded = null;
-          if(it.ghost){
-            /* A removed calendar event has to leave a tombstone, or the next
-             * render re-creates it from the calendar and the removal undoes
-             * itself. `hidden` rows are filtered out of the view. */
-            const tomb = Object.assign({}, it, {ghost:undefined, hidden:true});
-            delete tomb.ghost;
-            rateQueue({op:'add', block:block, item:tomb});
-          }else{
-            rateQueue({op:'delete', block:block, id:it.id});
-          }
-        };
-        acts.appendChild(del);
-        row.appendChild(acts);
-      }
-      card.appendChild(row);
+    const list = document.createElement('div');
+    list.className = 'droplist';
+    list.dataset.block = block;
+    rateSlots(block, items).forEach(function(slot){
+      list.appendChild(slot.gap ? rateGapRow(slot.at) : rateSlotRow(block, slot, future));
     });
+    host.appendChild(list);
 
-    const none = document.createElement('div');
-    none.className = 'nothing';
-    none.innerHTML = '<span class="nm">Nothing worth naming</span>';
-    const nb = document.createElement('button');
-    nb.textContent = blk.nothing ? 'Marked' : 'Mark';
-    nb.setAttribute('aria-pressed', String(!!blk.nothing));
-    nb.onclick = function(){ rateQueue({op:'nothing', block:block, nothing: !blk.nothing}); };
-    none.appendChild(nb);
-    card.appendChild(none);
-
-    host.appendChild(card);
+    /* "No plans" is about the future; "nothing worth naming" is a verdict on a
+     * block that has already happened. Showing both would blur the one
+     * distinction the instrument depends on. */
+    if(!future){
+      const none = document.createElement('div');
+      none.className = 'nothing';
+      none.innerHTML = '<span class="nm">Nothing worth naming</span>';
+      const nb = document.createElement('button');
+      nb.textContent = blk.nothing ? 'Marked' : 'Mark';
+      nb.setAttribute('aria-pressed', String(!!blk.nothing));
+      nb.onclick = function(){ rateQueue({op:'nothing', block:block, nothing: !blk.nothing}); };
+      none.appendChild(nb);
+      host.appendChild(none);
+    }
   });
 
   rateRenderRecents();
+}
+
+function rateGapRow(at){
+  const slot = document.createElement('div');
+  slot.className = 'slot gap';
+  slot.innerHTML = '<span class="gut">' + rateHhmm(at) + '</span>'
+                 + '<div class="body">No plans</div>';
+  return slot;
+}
+
+function rateSlotRow(block, slot, future){
+  const it = slot.item;
+  const wrap = document.createElement('div');
+  wrap.className = 'slot';
+  const gut = document.createElement('span');
+  gut.className = 'gut';
+  gut.textContent = slot.at === null ? '' : rateHhmm(slot.at);
+  wrap.appendChild(gut);
+  const body = document.createElement('div');
+  body.className = 'body';
+  body.appendChild(rateCard(block, it, future));
+  wrap.appendChild(body);
+  return wrap;
+}
+
+function rateCard(block, it, future){
+  const cat = RATE_CAT(it.cat);
+  const card = document.createElement('div');
+  card.className = 'ecard' + (it.happened===false ? ' void' : '');
+  card.style.setProperty('--c', rateCatVar(it.cat));
+  card.dataset.block = block;
+  card.dataset.id = it.id;
+
+  const top = document.createElement('div');
+  top.className = 'top';
+  const chip = document.createElement('span');
+  chip.className = 'chip';
+  /* Origin still matters after the redesign: "did not happen" only makes sense
+   * for something that was on the calendar rather than typed in afterwards. */
+  const from = it.source === 'calendar' ? ' &middot; cal' : '';
+  chip.innerHTML = svg(cat.icon) + '<span>' + escapeHtml(cat.label) + from + '</span>';
+  top.appendChild(chip);
+  if(it.mins){
+    const dur = document.createElement('span');
+    dur.className = 'dur';
+    dur.textContent = rateDurLabel(it.mins);
+    top.appendChild(dur);
+  }
+  if(!future && it.happened !== false){
+    const mv = (it.m===null||it.m===undefined) ? '-' : it.m;
+    const pv = (it.p===null||it.p===undefined) ? '-' : it.p;
+    const sc = document.createElement('span');
+    sc.className = 'sc';
+    sc.innerHTML = 'M<b>' + mv + '</b> P<b>' + pv + '</b>';
+    top.appendChild(sc);
+  }
+  if(it.happened === false){
+    const sc = document.createElement('span');
+    sc.className = 'sc';
+    sc.textContent = 'did not happen';
+    top.appendChild(sc);
+  }
+  card.appendChild(top);
+
+  const title = document.createElement('div');
+  title.className = 'title';
+  title.textContent = it.label;
+  card.appendChild(title);
+
+  const bits = [];
+  if(it.at){
+    const end = it.mins ? ' - ' + rateHhmm(rateHm(it.at) + it.mins) : '';
+    bits.push([ICON_CLOCK, it.at + end, true]);
+  }
+  if(it.place) bits.push([ICON_PIN, it.place, false]);
+  if(it.people && it.people.length) bits.push([ICON_WITH, it.people.join(', '), false]);
+  if(bits.length){
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    meta.innerHTML = bits.map(function(b){
+      const ring = b[2] ? '<circle cx="12" cy="12" r="9"/>' : '';
+      return '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" '
+           + 'stroke-linecap="round" stroke-linejoin="round">' + ring
+           + '<path d="' + b[0] + '"/></svg><em>' + escapeHtml(b[1]) + '</em></span>';
+    }).join('');
+    card.appendChild(meta);
+  }
+
+  const grip = document.createElement('span');
+  grip.className = 'grip';
+  grip.setAttribute('aria-label', 'Reorder');
+  grip.innerHTML = '<svg viewBox="0 0 12 20" width="12" height="20" aria-hidden="true">'
+    + '<circle cx="3" cy="6" r="1.3"/><circle cx="9" cy="6" r="1.3"/>'
+    + '<circle cx="3" cy="10" r="1.3"/><circle cx="9" cy="10" r="1.3"/>'
+    + '<circle cx="3" cy="14" r="1.3"/><circle cx="9" cy="14" r="1.3"/></svg>';
+  grip.addEventListener('pointerdown', function(e){ rateDragStart(e, card, it); });
+  card.appendChild(grip);
+
+  card.onclick = function(){
+    rstate.expanded = (rstate.expanded===it.id) ? null : it.id;
+    rateRender();
+  };
+
+  if(rstate.expanded !== it.id) return card;
+
+  const plan = document.createElement('div');
+  plan.className = 'planbox';
+  const patch = function(fields){
+    rateMaterialise(block, it);
+    rateQueue({op:'edit', block:block, id:it.id, patch:fields});
+  };
+  plan.appendChild(rateCatRow(it, function(v){ patch({cat:v}); }));
+  plan.appendChild(ratePlanField('At', it.at, '', 'time', function(v){ patch({at:v}); }));
+  plan.appendChild(rateDurationRow(it, function(v){ patch({mins:v}); }));
+  plan.appendChild(ratePlanField('Where', it.place, 'place', 'text',
+    function(v){ if(v) ratePushMemory(RATE_PLACES, v); patch({place:v}); },
+    rateMemory(RATE_PLACES)));
+  plan.appendChild(ratePlanField('With', (it.people||[]).join(', '), 'people', 'text',
+    function(v){
+      const people = v ? v.split(',').map(s=>s.trim()).filter(Boolean) : [];
+      people.forEach(function(p){ ratePushMemory(RATE_PEOPLE, p); });
+      patch({people:people});
+    }, rateMemory(RATE_PEOPLE)));
+  card.appendChild(plan);
+
+  if(!future && it.happened !== false){
+    card.appendChild(rateStrip('m', (it.m===undefined?null:it.m), 'var(--study)', function(v){
+      rateMaterialise(block, it);
+      rateQueue({op:'rate', block:block, id:it.id, m:v});
+    }));
+    card.appendChild(rateStrip('p', (it.p===undefined?null:it.p), 'var(--trained)', function(v){
+      rateMaterialise(block, it);
+      rateQueue({op:'rate', block:block, id:it.id, p:v});
+    }));
+  }
+
+  const acts = document.createElement('div');
+  acts.className = 'actacts';
+  if(!future){
+    const dnh = document.createElement('button');
+    dnh.textContent = it.happened===false ? 'It did happen' : 'Did not happen';
+    if(it.happened===false) dnh.className = 'on';
+    dnh.onclick = function(e){
+      e.stopPropagation();
+      rateMaterialise(block, it);
+      rateQueue({op:'happened', block:block, id:it.id, happened: it.happened===false});
+    };
+    acts.appendChild(dnh);
+  }
+  const del = document.createElement('button');
+  del.className = 'del'; del.textContent = 'Remove';
+  del.onclick = function(e){
+    e.stopPropagation();
+    rstate.expanded = null;
+    if(it.ghost){
+      /* A removed calendar event has to leave a tombstone, or the next render
+       * recreates it from the calendar and the removal undoes itself. */
+      const tomb = Object.assign({}, it, {hidden:true});
+      delete tomb.ghost;
+      rateQueue({op:'add', block:block, item:tomb});
+    }else{
+      rateQueue({op:'delete', block:block, id:it.id});
+    }
+  };
+  acts.appendChild(del);
+  card.appendChild(acts);
+  return card;
+}
+
+/* ---------- drag ---------- */
+/* Pointer events, not HTML5 drag-and-drop, which never fires on iOS Safari.
+ * The gesture starts on an explicit grip rather than the card, so it cannot be
+ * confused with a tap to expand or with scrolling the page. The row is moved
+ * in the DOM as the finger travels and the final position is committed once. */
+let rdrag = null;
+
+function rateDragStart(e, card, it){
+  if(e.button !== undefined && e.button !== 0) return;
+  e.preventDefault();
+  e.stopPropagation();
+  rdrag = {slot:card.closest('.slot'), card:card, id:it.id,
+           from:card.dataset.block, moved:false};
+  card.classList.add('dragging');
+  document.addEventListener('pointermove', rateDragMove, {passive:false});
+  document.addEventListener('pointerup', rateDragEnd);
+  document.addEventListener('pointercancel', rateDragEnd);
+  document.body.classList.add('dragging-now');
+}
+
+function rateDragMove(e){
+  if(!rdrag) return;
+  e.preventDefault();
+  rdrag.moved = true;
+  const y = e.clientY;
+  const lists = [...document.querySelectorAll('#rBlocks .droplist')];
+  let target = null;
+  for(const list of lists){
+    const r = list.getBoundingClientRect();
+    if(y >= r.top - 12 && y <= r.bottom + 12){ target = list; break; }
+  }
+  if(!target) return;
+  const siblings = [...target.querySelectorAll('.slot')].filter(el=>el !== rdrag.slot);
+  let before = null;
+  for(const el of siblings){
+    const r = el.getBoundingClientRect();
+    if(y < r.top + r.height/2){ before = el; break; }
+  }
+  target.insertBefore(rdrag.slot, before);
+}
+
+function rateDragEnd(){
+  document.removeEventListener('pointermove', rateDragMove);
+  document.removeEventListener('pointerup', rateDragEnd);
+  document.removeEventListener('pointercancel', rateDragEnd);
+  document.body.classList.remove('dragging-now');
+  if(!rdrag) return;
+  const info = rdrag;
+  rdrag = null;
+  info.card.classList.remove('dragging');
+  if(!info.moved){ return; }
+
+  const list = info.slot.closest('.droplist');
+  const toBlock = list ? list.dataset.block : info.from;
+  /* Gap rows are decoration; the index the model cares about counts cards. */
+  const index = [...list.querySelectorAll('.slot:not(.gap)')].indexOf(info.slot);
+  const stored = rstate.doc.blocks[info.from].items.some(i=>i.id===info.id);
+  if(!stored){
+    const view = rateViewItems(info.from).find(i=>i.id===info.id);
+    if(view) rateMaterialise(info.from, view);
+  }
+  rateQueue({op:'move', block:info.from, id:info.id, to:toBlock, index:Math.max(0,index)});
+}
+
+/* ---------- remembered labels, places and people ---------- */
+const rateMemory = key=>{try{return JSON.parse(localStorage.getItem(key)||'[]');}catch{return[];}};
+function ratePushMemory(key, value){
+  const v = String(value||'').trim();
+  if(!v) return;
+  const cur = rateMemory(key).filter(x=>x.toLowerCase()!==v.toLowerCase());
+  cur.unshift(v);
+  localStorage.setItem(key, JSON.stringify(cur.slice(0, RATE_RECENT_MAX)));
 }
 
 function rateRenderRecents(){
@@ -1936,12 +2396,14 @@ function rateAdd(label){
   const text = (label !== undefined ? label : field.value).trim();
   if(!text) return;
   const block = rstate.addBlock || rateBlockNow();
-  rateQueue({op:'add', block:block,
-             item:{id:rateId(), label:text, source:'manual',
-                   m:null, p:null, happened:true, rated_at:null}});
+  const item = {id:rateId(), label:text, source:'manual', cat:rstate.addCat || 'personal',
+                at:null, mins:null, place:null, people:[], m:null, p:null,
+                happened:true, rated_at:null, planned_at:new Date().toISOString()};
+  rateQueue({op:'add', block:block, item:item, index:rateInsertIndex(block, null)});
   ratePushRecent(text);
   field.value = '';
-  rateRenderRecents();
+  rstate.expanded = item.id;      // open it, so a time or place is one tap away
+  rateRender();
 }
 
 function rateSetAddBlock(b){
@@ -1951,8 +2413,11 @@ function rateSetAddBlock(b){
 }
 
 async function rateGoto(date){
+  /* Both limits come from the same helpers the arrows are disabled by. Reading
+   * them from two places is how the forward arrow ended up enabled while this
+   * guard still refused every date past today. */
   if(date < rateFloor()) return;
-  if(date > isoOf(new Date())) return;   // no rating the future
+  if(date > rateCeiling()) return;
   rstate.expanded = null;
   await rateLoad(date);
   rateRender();
