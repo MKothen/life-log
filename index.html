@@ -231,11 +231,57 @@ input[type=password]{
 }
 
 .daynav{display:flex;align-items:center;gap:10px;margin:14px 16px 0}
-.daynav button{width:34px;height:34px;border-radius:9px;background:var(--fill);
+/* Scoped to the two arrows: the rule used to hit every button in the row, so
+ * the Day/Week pill inherited a 34px width and had its label clipped. */
+.daynav #rPrev,.daynav #rNext{width:34px;height:34px;border-radius:9px;background:var(--fill);
   color:var(--label);font-size:17px;font-weight:600;line-height:34px;text-align:center}
 .daynav button:disabled{opacity:.3}
-.daynav .lab{flex:1;text-align:center;font-size:16px;font-weight:600}
+.daynav .lab{flex:1;min-width:0;text-align:center;font-size:16px;font-weight:600;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .daynav .lab small{display:block;font-weight:400;font-size:12px;color:var(--label2)}
+
+.wkbtn{flex:none;padding:6px 11px;border-radius:9px;background:var(--fill);
+  font-size:13px;font-weight:600;color:var(--label)}
+
+.wkgrid{padding:2px 0}
+.wkrow{display:flex;align-items:center;gap:9px;padding:9px 14px;border-top:1px solid var(--sep)}
+.wkrow:first-child{border-top:0}
+.wkrow .wd{flex:none;width:38px;font-size:13px;color:var(--label);line-height:1.15}
+.wkrow .wd b{font-weight:600}
+.wkrow .wd small{display:block;font-size:11px;color:var(--label2);font-variant-numeric:tabular-nums}
+.wkrow.today .wd b{color:var(--blue)}
+.wkrow.today .wd small{color:var(--blue)}
+.wkcells{flex:1;display:flex;gap:4px;min-width:0}
+.wkcell{flex:1;min-width:0;height:32px;border-radius:8px;background:var(--fill);
+  display:flex;align-items:center;justify-content:center;gap:3px;padding:0 5px;
+  color:var(--label2);font-size:13px}
+/* Three states that must never look alike: activities, an explicit "nothing",
+   and a block nobody looked at. */
+.wkcell.wk-unlogged{background:transparent;border:1px dashed var(--sep)}
+.wkcell .dot{width:6px;height:6px;border-radius:50%;flex:none}
+.wkcell .dot.low{background:transparent !important;box-shadow:inset 0 0 0 1.5px var(--label2)}
+.wkcell .more{font-size:10px;color:var(--label2);font-variant-numeric:tabular-nums}
+.wkscore{flex:none;width:52px;text-align:right;font-size:12px;color:var(--label2);
+  font-variant-numeric:tabular-nums}
+.wkscore b{font-weight:600;color:var(--text)}
+.wklegend{font-size:11.5px;color:var(--label2);line-height:1.45;margin:8px 20px 0}
+
+.wksum{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--sep);overflow:hidden}
+.wkstat{background:var(--card);padding:12px 14px}
+.wkstat .v{display:block;font-size:24px;font-weight:700;letter-spacing:-0.02em;
+  font-variant-numeric:tabular-nums}
+.wkstat .k{display:block;font-size:12px;color:var(--label)}
+.wkstat .h{display:block;font-size:11px;color:var(--label2);margin-top:2px}
+.wksplit{display:flex;margin-top:8px}
+.wksplit div{flex:1;padding:12px 14px;display:flex;align-items:baseline;gap:7px}
+.wksplit div+div{border-left:1px solid var(--sep)}
+.wksplit b{font-size:19px;font-variant-numeric:tabular-nums}
+.wksplit span{font-size:12px;color:var(--label);line-height:1.25}
+.wktop div{display:flex;align-items:center;gap:9px;padding:11px 14px;border-top:1px solid var(--sep)}
+.wktop div:first-child{border-top:0}
+.wktop i{width:8px;height:8px;border-radius:50%;flex:none}
+.wktop span{flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wktop b{font-size:14px;font-variant-numeric:tabular-nums}
 
 .blockhead{display:flex;align-items:center;gap:7px;margin:22px 18px 8px}
 .blockhead svg{width:16px;height:16px;flex:none}
@@ -566,8 +612,10 @@ body.dragging-now{user-select:none;-webkit-user-select:none}
       <button id="rPrev" aria-label="Previous day">&lsaquo;</button>
       <span class="lab" id="rDayLab"></span>
       <button id="rNext" aria-label="Next day">&rsaquo;</button>
+      <button class="wkbtn" id="rModeBtn" aria-label="Switch to the week">Week</button>
     </div>
     <div id="rBlocks"></div>
+    <div id="rWeek" hidden></div>
   </div>
 
   <div id="sweep" hidden class="sweepwrap">
@@ -811,11 +859,17 @@ function paint(){
   $('#dailyExtras').hidden = tab==='todo' || tab==='rate';
   $('#submitBtn').hidden   = tab==='todo' || tab==='rate';
   $('#todoBar').hidden     = tab!=='todo';
-  $('#rateBar').hidden     = tab!=='rate';
+  /* Week mode has nothing to add an activity to, so the capture bar and the
+   * scroll floor it needs go with it. paint() runs after rateSetMode on a tab
+   * switch, so the mode has to be consulted here too, or coming back to Rate
+   * drops the bar on top of the week. */
+  const weekMode = (typeof rstate !== 'undefined') && rstate.mode === 'week';
+  $('#rateBar').hidden     = tab!=='rate' || weekMode;
+  $('#bar').hidden         = weekMode;
   /* Rate carries its own day navigator, so a second date line above it is
    * duplication in the space the header was just removed to free. */
   $('#topline').hidden     = tab==='rate' || tab==='todo';
-  $('#app').classList.toggle('ratetab', tab==='rate');
+  $('#app').classList.toggle('ratetab', tab==='rate' && !weekMode);
 
   const d=logDate(slot);
   const nice=new Date(d+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
@@ -1657,7 +1711,7 @@ const rateFloor   = () => addDays(isoOf(new Date()), -RATE_BACKFILL_DAYS);
 const rateCeiling = () => addDays(isoOf(new Date()),  RATE_PLAN_AHEAD_DAYS);
 
 let rstate = {date:null, doc:null, sha:null, expanded:null,
-              addBlock:null, cal:null};
+              addBlock:null, cal:null, mode:'day', week:{}, weekStart:null};
 
 const ratePath = d => '/contents/days/' + d + '.json';
 
@@ -2126,6 +2180,7 @@ function rateCatRow(item, onPick){
 function rateRender(){
   const host = document.querySelector('#rBlocks');
   if(!host || !rstate.doc) return;
+  if(rstate.mode === 'week') return;         // the week view owns the header
 
   const lab = rateDayLabel(rstate.date);
   document.querySelector('#rDayLab').innerHTML =
@@ -2486,8 +2541,32 @@ async function rateGoto(date){
 }
 
 /* ---------- wiring ---------- */
-document.querySelector('#rPrev').onclick = function(){ rateGoto(addDays(rstate.date, -1)); };
-document.querySelector('#rNext').onclick = function(){ rateGoto(addDays(rstate.date,  1)); };
+document.querySelector('#rPrev').onclick = function(){ rateStep(-1); };
+document.querySelector('#rNext').onclick = function(){ rateStep( 1); };
+document.querySelector('#rModeBtn').onclick = function(){
+  if(rstate.mode === 'week'){
+    rateSetMode('day');
+    /* Land on today when the week on screen contains it, so the commonest tap
+     * does not drop him on an arbitrary Monday. */
+    const today = isoOf(new Date());
+    const inWeek = today >= rstate.weekStart && today <= addDays(rstate.weekStart, 6);
+    rateGoto(inWeek ? today : rstate.weekStart);
+  }else{
+    rateSetMode('week');
+    rateLoadWeek(rateMonday(rstate.date));
+  }
+};
+
+/* One arrow, two units. */
+function rateStep(n){
+  if(rstate.mode === 'week'){
+    const start = addDays(rstate.weekStart, n * 7);
+    if(addDays(start, 6) < rateFloor() || start > rateCeiling()) return;
+    rateLoadWeek(start);
+  }else{
+    rateGoto(addDays(rstate.date, n));
+  }
+}
 document.querySelector('#rAdd').onclick  = function(){ rateAdd(); };
 document.querySelector('#rText').addEventListener('keydown', function(e){
   if(e.key==='Enter') rateAdd();
@@ -2538,6 +2617,255 @@ $('#rail').addEventListener('click', function(e){
 ['pointerdown','pointermove'].forEach(function(evt){
   $('#rail').addEventListener(evt, function(){ if(railTimer) railPoke(); });
 });
+
+/* ===========================================================================
+ * WEEK  --  the Activity Scheduling Form, rotated for a phone
+ *
+ * Her sheet is 7 columns x 3 blocks. Seven columns do not fit a phone, so the
+ * grid is transposed: one row per day, three cells per row. The end-of-week
+ * review she asks for sits on top of it.
+ *
+ * The cell states mirror the day view's and must stay distinguishable, because
+ * the difference between them is the whole instrument: a block with activities,
+ * a block explicitly marked as holding nothing worth naming, and a block nobody
+ * looked at are three different facts, not two.
+ * =========================================================================== */
+
+const rateMonday = iso => {
+  const d = new Date(iso + 'T12:00:00');
+  const back = (d.getDay() + 6) % 7;         // Monday = 0
+  return addDays(iso, -back);
+};
+
+/* Mirror of vault_infra.life.mastery._rated. Change one, change the other.
+ * 0 is a rating; the test is against null, never against falsiness. */
+function rateIsRated(it){
+  if(!it || it.hidden || it.happened === false) return false;
+  return Number.isInteger(it.m) && Number.isInteger(it.p);
+}
+
+function rateBlockCells(doc, block){
+  const blk = (doc && doc.blocks && doc.blocks[block]) || null;
+  if(!blk) return {state:'unlogged', items:[]};
+  const items = (blk.items || []).filter(i=>!i.hidden);
+  if(items.length) return {state:'has', items:items};
+  return {state: blk.nothing ? 'nothing' : 'unlogged', items:[]};
+}
+
+function rateWeekStats(docs){
+  const rated = [];
+  let blocks = 0, nothing = 0;
+  for(const doc of Object.values(docs)){
+    if(!doc) continue;
+    for(const block of RATE_BLOCKS){
+      const cell = rateBlockCells(doc, block);
+      if(cell.state !== 'unlogged') blocks++;
+      if(cell.state === 'nothing') nothing++;
+      cell.items.filter(rateIsRated).forEach(i=>rated.push(i));
+    }
+  }
+  const n = rated.length;
+  return {
+    blocks: blocks, nothing: nothing, n: n,
+    meanM: n ? rated.reduce((a,i)=>a+i.m,0)/n : null,
+    meanP: n ? rated.reduce((a,i)=>a+i.p,0)/n : null,
+    lowLow: rated.filter(i=>i.m<=3 && i.p<=3).length,
+    mOnly: rated.filter(i=>i.m>=6 && i.p<=3).length,
+    pOnly: rated.filter(i=>i.p>=6 && i.m<=3).length,
+    top: rated.slice().sort((a,b)=>(b.m+b.p)-(a.m+a.p)).slice(0,3)
+  };
+}
+
+async function rateLoadWeek(start){
+  const days = Array.from({length:7}, (_,i)=>addDays(start, i));
+  const cache = rateReadCache();
+  const ops = rateReadOps();
+  const build = (date, doc) =>
+    rateApplyOps(rateNormalise(JSON.parse(JSON.stringify(doc)), date),
+                 ops.filter(o=>o.date===date));
+
+  /* Paint from cache first; a seven-file fetch is too slow to hold the view. */
+  rstate.week = {};
+  for(const d of days) if(cache[d]) rstate.week[d] = build(d, cache[d].doc);
+  rstate.weekStart = start;
+  rateRenderWeek();
+
+  const got = await Promise.all(days.map(function(d){
+    return rateFetch(d).then(r=>({date:d, doc:r.doc, sha:r.sha})).catch(()=>null);
+  }));
+  if(rstate.weekStart !== start) return;     // he moved on while this was in flight
+  for(const r of got){
+    if(!r) continue;
+    rateWriteCache(r.date, r.doc, r.sha);
+    rstate.week[r.date] = build(r.date, r.doc);
+  }
+  rateRenderWeek();
+}
+
+function rateWeekLabel(start){
+  const end = addDays(start, 6);
+  const a = new Date(start + 'T12:00:00'), b = new Date(end + 'T12:00:00');
+  const mon = d => d.toLocaleDateString(undefined, {month:'short'});
+  const same = a.getMonth() === b.getMonth();
+  const main = same
+    ? a.getDate() + ' - ' + b.getDate() + ' ' + mon(b)
+    : a.getDate() + ' ' + mon(a) + ' - ' + b.getDate() + ' ' + mon(b);
+  const today = isoOf(new Date());
+  const sub = (today >= start && today <= end) ? 'This week'
+            : (today > end ? '' : 'Planning');
+  return {main:main, sub:sub};
+}
+
+function rateRenderWeek(){
+  const host = document.querySelector('#rWeek');
+  if(!host || !rstate.weekStart) return;
+  const start = rstate.weekStart;
+  const today = isoOf(new Date());
+
+  const lab = rateWeekLabel(start);
+  document.querySelector('#rDayLab').innerHTML =
+    escapeHtml(lab.main) + '<small>' + escapeHtml(lab.sub) + '</small>';
+  document.querySelector('#rPrev').disabled = addDays(start, -7) < rateMonday(rateFloor());
+  document.querySelector('#rNext').disabled = addDays(start,  7) > rateCeiling();
+
+  host.innerHTML = '';
+
+  const grid = document.createElement('div');
+  grid.className = 'card wkgrid';
+  for(let i = 0; i < 7; i++){
+    const date = addDays(start, i);
+    const doc = rstate.week[date];
+    const dt = new Date(date + 'T12:00:00');
+
+    const row = document.createElement('div');
+    row.className = 'wkrow' + (date === today ? ' today' : '');
+    const wd = document.createElement('span');
+    wd.className = 'wd';
+    wd.innerHTML = '<b>' + dt.toLocaleDateString(undefined,{weekday:'short'}) + '</b>'
+                 + '<small>' + dt.getDate() + '</small>';
+    row.appendChild(wd);
+
+    const cells = document.createElement('div');
+    cells.className = 'wkcells';
+    const rated = [];
+    RATE_BLOCKS.forEach(function(block){
+      const cell = rateBlockCells(doc, block);
+      cell.items.filter(rateIsRated).forEach(i=>rated.push(i));
+      const el = document.createElement('button');
+      /* Prefixed: a bare `nothing` also matches the day view's row rule, which
+       * is declared later in the sheet and was overriding the cell's margins. */
+      el.className = 'wkcell wk-' + cell.state;
+      el.setAttribute('aria-label', RATE_LABEL[block] + ' ' + date);
+      if(cell.state === 'nothing'){
+        el.textContent = '–';
+      }else if(cell.state === 'has'){
+        const shown = cell.items.slice(0, 4);
+        shown.forEach(function(it){
+          const dot = document.createElement('i');
+          dot.className = 'dot' + (rateIsRated(it) && it.m <= 3 && it.p <= 3 ? ' low' : '');
+          dot.style.background = rateCatVar(it.cat);
+          el.appendChild(dot);
+        });
+        if(cell.items.length > 4){
+          const more = document.createElement('span');
+          more.className = 'more';
+          more.textContent = '+' + (cell.items.length - 4);
+          el.appendChild(more);
+        }
+      }
+      el.onclick = function(){ rateSetMode('day'); rateGoto(date); };
+      cells.appendChild(el);
+    });
+    row.appendChild(cells);
+
+    const sc = document.createElement('span');
+    sc.className = 'wkscore';
+    if(rated.length){
+      const m = rated.reduce((a,i)=>a+i.m,0)/rated.length;
+      const p = rated.reduce((a,i)=>a+i.p,0)/rated.length;
+      sc.innerHTML = '<b>' + m.toFixed(1) + '</b> / <b>' + p.toFixed(1) + '</b>';
+    }
+    row.appendChild(sc);
+    grid.appendChild(row);
+  }
+  host.appendChild(grid);
+
+  const legend = document.createElement('p');
+  legend.className = 'wklegend';
+  legend.innerHTML = 'Dots are activities, coloured by kind; a hollow one scored '
+                   + '3 or under on both. A dash is a block you marked as holding '
+                   + 'nothing. An outline is a block nobody looked at.';
+  host.appendChild(legend);
+
+  /* --- the end-of-week review --- */
+  const s = rateWeekStats(rstate.week);
+  const head = document.createElement('div');
+  head.className = 'blockhead';
+  head.innerHTML = '<span class="t">This week</span>';
+  host.appendChild(head);
+
+  const sum = document.createElement('div');
+  sum.className = 'card wksum';
+  const stat = function(label, value, hint){
+    const d = document.createElement('div');
+    d.className = 'wkstat';
+    d.innerHTML = '<span class="v">' + value + '</span>'
+                + '<span class="k">' + label + '</span>'
+                + (hint ? '<span class="h">' + hint + '</span>' : '');
+    return d;
+  };
+  /* Coverage first, before any mean. A mean over three rated blocks out of
+   * twenty-one is not a week, and reading it as one is a mistake this folder
+   * has already made once. */
+  sum.appendChild(stat('blocks logged', s.blocks + '/21',
+                       s.nothing ? s.nothing + ' held nothing' : ''));
+  sum.appendChild(stat('activities', s.n, s.lowLow ? s.lowLow + ' gave nothing back' : ''));
+  sum.appendChild(stat('mastery', s.meanM === null ? '-' : s.meanM.toFixed(1)));
+  sum.appendChild(stat('pleasure', s.meanP === null ? '-' : s.meanP.toFixed(1)));
+  host.appendChild(sum);
+
+  if(s.n){
+    const split = document.createElement('div');
+    split.className = 'card wksplit';
+    split.innerHTML =
+      '<div><b>' + s.mOnly + '</b><span>mastery, no pleasure</span></div>' +
+      '<div><b>' + s.pOnly + '</b><span>pleasure, no mastery</span></div>';
+    host.appendChild(split);
+
+    if(s.top.length){
+      const h2 = document.createElement('div');
+      h2.className = 'blockhead';
+      h2.innerHTML = '<span class="t">Highest yield</span>';
+      host.appendChild(h2);
+      const top = document.createElement('div');
+      top.className = 'card wktop';
+      s.top.forEach(function(it){
+        const r = document.createElement('div');
+        r.innerHTML = '<i style="background:' + rateCatVar(it.cat) + '"></i>'
+                    + '<span>' + escapeHtml(it.label) + '</span>'
+                    + '<b>' + (it.m + it.p) + '</b>';
+        top.appendChild(r);
+      });
+      host.appendChild(top);
+    }
+  }
+}
+
+/* ---------- day / week mode ---------- */
+function rateSetMode(mode){
+  rstate.mode = mode;
+  const week = mode === 'week';
+  document.querySelector('#rWeek').hidden = !week;
+  document.querySelector('#rBlocks').hidden = week;
+  document.querySelector('#rateBar').hidden = week;
+  /* Everything inside the bar is hidden in week mode, and an empty bar is still
+   * a blurred band across the bottom of the page. */
+  document.querySelector('#bar').hidden = week;
+  document.querySelector('#rModeBtn').textContent = week ? 'Day' : 'Week';
+  document.querySelector('#rModeBtn').setAttribute('aria-label',
+    week ? 'Switch to one day' : 'Switch to the week');
+  document.querySelector('#app').classList.toggle('ratetab', !week);
+}
 
 document.querySelector('#tabRate').onclick = async function(){
   tab = 'rate'; paint();
