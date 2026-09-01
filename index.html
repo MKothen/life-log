@@ -46,6 +46,9 @@ button{border:0;background:none;padding:0;cursor:pointer}
 [hidden]{display:none !important}
 
 .wrap{max-width:520px;margin:0 auto;padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+/* The rate bar carries recents + a block picker + the input, roughly twice the
+ * height of the daily submit bar, so the scroll floor has to move with it. */
+.wrap.ratetab{padding-bottom:calc(216px + env(safe-area-inset-bottom))}
 header{padding:12px 20px 4px}
 h1{font-size:34px;font-weight:700;letter-spacing:-0.02em;margin:0}
 .subtitle{color:var(--label);font-size:15px;margin:2px 0 0}
@@ -189,6 +192,56 @@ input[type=password]{
                       padding:0 20px;font-size:22px}
 .sweepacts{display:flex;gap:8px;padding:0 14px 10px}
 .sweepacts .submit{flex:1;margin:0;padding:12px 0}
+
+/* ---------------------------------------------------------------------------
+ * RATE  --  mastery / pleasure block ratings
+ * Spec: 02_Areas/infrastructure/2026-09-01_life-log-mastery-pleasure-design.md
+ * ------------------------------------------------------------------------- */
+.daynav{display:flex;align-items:center;gap:10px;margin:14px 16px 0}
+.daynav button{width:34px;height:34px;border-radius:9px;background:var(--fill);
+  color:var(--label);font-size:17px;font-weight:600;line-height:34px;text-align:center}
+.daynav button:disabled{opacity:.3}
+.daynav .lab{flex:1;text-align:center;font-size:15px;font-weight:600}
+.daynav .lab small{display:block;font-weight:400;font-size:12px;color:var(--label2)}
+
+.blockhead{display:flex;align-items:baseline;gap:8px;margin:22px 20px 7px}
+.blockhead .t{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--label)}
+.blockhead .c{margin-left:auto;font-size:13px;color:var(--label2);font-variant-numeric:tabular-nums}
+
+.act{padding:12px 16px;border-top:1px solid var(--sep);display:block;width:100%;text-align:left}
+.act:first-child{border-top:0}
+.acthead{display:flex;align-items:center;gap:8px}
+.acthead .nm{flex:1;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acthead .sc{font-size:13px;font-variant-numeric:tabular-nums;color:var(--label2);flex:none}
+.acthead .sc b{font-weight:600;color:var(--text)}
+.act.void .nm{text-decoration:line-through;color:var(--label2)}
+.act .src{font-size:11px;color:var(--label2);flex:none;padding:1px 6px;border-radius:5px;background:var(--fill)}
+
+.striprow{margin-top:10px}
+.striprow .lb{display:flex;justify-content:space-between;font-size:12px;color:var(--label);margin-bottom:5px}
+.strip{display:flex;gap:2px}
+.strip button{flex:1;height:30px;border-radius:6px;background:var(--fill);
+  font-size:12px;font-variant-numeric:tabular-nums;color:var(--label)}
+.strip button[aria-pressed="true"]{background:var(--accent);color:#fff;font-weight:600}
+.actacts{display:flex;gap:8px;margin-top:12px}
+.actacts button{flex:1;padding:8px 0;border-radius:8px;background:var(--fill);
+  font-size:13px;font-weight:600;color:var(--label)}
+.actacts button.on{background:var(--fill2);color:var(--text)}
+.actacts button.del{color:var(--red)}
+
+.nothing{padding:12px 16px;border-top:1px solid var(--sep);display:flex;align-items:center;gap:8px}
+.nothing .nm{flex:1;font-size:15px;color:var(--label)}
+.nothing button{padding:6px 12px;border-radius:7px;background:var(--fill);font-size:13px;
+  font-weight:600;color:var(--label)}
+.nothing button[aria-pressed="true"]{background:var(--stress);color:#fff}
+
+.recents{display:flex;gap:6px;overflow-x:auto;padding:0 0 8px;scrollbar-width:none}
+.recents::-webkit-scrollbar{display:none}
+.recents button{flex:none;padding:6px 11px;border-radius:8px;background:var(--fill);
+  font-size:13px;color:var(--text);white-space:nowrap}
+.blockpick{display:flex;gap:2px;padding:2px;background:var(--fill);border-radius:9px;margin-bottom:8px}
+.blockpick button{flex:1;padding:6px 0;font-size:13px;font-weight:600;border-radius:7px;color:var(--label)}
+.blockpick button[aria-selected="true"]{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.12)}
 </style>
 </head>
 <body>
@@ -225,6 +278,7 @@ input[type=password]{
     <button role="tab" id="tabMorning" aria-selected="true">Morning</button>
     <button role="tab" id="tabEvening" aria-selected="false">Evening</button>
     <button role="tab" id="tabTodo" aria-selected="false">Todo</button>
+    <button role="tab" id="tabRate" aria-selected="false">Rate</button>
   </div>
 
   <!-- MORNING -->
@@ -424,6 +478,21 @@ input[type=password]{
     <div id="todoList"></div>
   </div>
 
+  <!-- RATE -->
+  <div id="cardRate" hidden>
+    <div class="daynav">
+      <button id="rPrev" aria-label="Previous day">&lsaquo;</button>
+      <span class="lab" id="rDayLab"></span>
+      <button id="rNext" aria-label="Next day">&rsaquo;</button>
+    </div>
+    <div id="rBlocks"></div>
+    <p style="font-size:13px;color:var(--label2);margin:16px 20px 0;line-height:1.45">
+      Mastery is how much it felt like an accomplishment. Pleasure is how much you
+      enjoyed it. They are rated separately on purpose - the point is to find where
+      they come apart. A block with nothing in it is data, so mark it rather than
+      leaving it blank.</p>
+  </div>
+
   <div id="sweep" hidden class="sweepwrap">
     <div class="card sweepcard">
       <div class="weekhead"><span class="t">Someday is over budget</span></div>
@@ -473,6 +542,20 @@ input[type=password]{
          the element's position at open time; tapping it dismisses the keyboard,
          the bar reflows back down, and the popover is left orphaned mid-screen
          on iOS. Chips have no popover to orphan, and cost one tap not two. -->
+    <div id="rateBar" hidden>
+      <div class="recents" id="rRecents"></div>
+      <div class="blockpick" id="rBlockPick">
+        <button data-b="morning" aria-selected="true">Morning</button>
+        <button data-b="afternoon" aria-selected="false">Afternoon</button>
+        <button data-b="evening" aria-selected="false">Evening</button>
+      </div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="rText" placeholder="what did you do..." maxlength="80"
+               autocomplete="off" autocapitalize="sentences"
+               style="flex:1;padding:10px 12px;border-radius:9px;border:1px solid var(--sep);background:var(--card)">
+        <button class="submit" id="rAdd" style="--accent:var(--blue);flex:none;width:52px;margin:0">+</button>
+      </div>
+    </div>
     <div id="todoBar" hidden>
       <div id="todoCatChips" class="chips"></div>
       <div class="todoinputrow">
@@ -618,12 +701,17 @@ function paint(){
   $('#tabMorning').setAttribute('aria-selected',String(tab==='morning'));
   $('#tabEvening').setAttribute('aria-selected',String(tab==='evening'));
   $('#tabTodo').setAttribute('aria-selected',String(tab==='todo'));
+  $('#tabRate').setAttribute('aria-selected',String(tab==='rate'));
   $('#cardMorning').hidden = tab!=='morning';
   $('#cardEvening').hidden = tab!=='evening';
   $('#cardTodo').hidden    = tab!=='todo';
-  $('#dailyExtras').hidden = tab==='todo';
-  $('#submitBtn').hidden   = tab==='todo';
+  $('#cardRate').hidden    = tab!=='rate';
+  /* The week dots and the submit button belong to the daily card only. */
+  $('#dailyExtras').hidden = tab==='todo' || tab==='rate';
+  $('#submitBtn').hidden   = tab==='todo' || tab==='rate';
   $('#todoBar').hidden     = tab!=='todo';
+  $('#rateBar').hidden     = tab!=='rate';
+  $('#app').classList.toggle('ratetab', tab==='rate');
 
   const d=logDate(slot);
   const nice=new Date(d+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
@@ -1421,6 +1509,471 @@ if(_todoFilter){
     };
   });
 }
+
+/* ===========================================================================
+ * RATE  --  mastery / pleasure block ratings
+ * Spec: 02_Areas/infrastructure/2026-09-01_life-log-mastery-pleasure-design.md
+ *
+ * One file per day at days/<date>.json, an ops queue for offline, and the
+ * same 409-retry save loop as the todo section. Calendar events are merged
+ * in at RENDER time only: an unrated plan row carries no information, so it
+ * is never written. Touching one materialises it first (rateMaterialise).
+ * =========================================================================== */
+
+const RATE_VERSION = 1;
+const RATE_BLOCKS  = ['morning','afternoon','evening'];
+const RATE_LABEL   = {morning:'Morning', afternoon:'Afternoon', evening:'Evening'};
+const RATE_OPS     = 'lifelog.rateops';     // pending operations, all dates
+const RATE_CACHE   = 'lifelog.ratedays';    // {date:{doc,sha}} last server state
+const RATE_RECENT  = 'lifelog.raterecent';  // device-local recent activity labels
+const RATE_CAL     = 'lifelog.ratecal';     // cached calendar/upcoming.json
+const RATE_RECENT_MAX = 24;
+
+/* The five weeks between the two appointments, 2026-09-01 -> 2026-10-06. */
+const RATE_START = '2026-09-01';
+const RATE_END   = '2026-10-06';
+
+let rstate = {date:null, doc:null, sha:null, expanded:null,
+              addBlock:null, cal:null};
+
+const ratePath = d => '/contents/days/' + d + '.json';
+
+function rateBlankDoc(date){
+  const blocks = {};
+  RATE_BLOCKS.forEach(b => blocks[b] = {nothing:false, items:[]});
+  return {version:RATE_VERSION, date:date, updated_at:new Date().toISOString(), blocks:blocks};
+}
+
+/* Old docs are upgraded in place rather than rejected -- a missing block key
+ * would otherwise throw on every render after a schema change. */
+function rateNormalise(doc, date){
+  if(!doc || typeof doc!=='object') return rateBlankDoc(date);
+  doc.version = RATE_VERSION;
+  doc.date = doc.date || date;
+  doc.blocks = doc.blocks || {};
+  RATE_BLOCKS.forEach(b=>{
+    const cur = doc.blocks[b];
+    doc.blocks[b] = {nothing: !!(cur && cur.nothing),
+                     items: (cur && Array.isArray(cur.items)) ? cur.items : []};
+  });
+  return doc;
+}
+
+function rateId(){
+  const abc = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  const b = crypto.getRandomValues(new Uint8Array(6));
+  return Array.from(b, n=>abc[n % 36]).join('');
+}
+
+/* Deterministic id for a calendar event so that materialising it twice -- on
+ * two devices, or beside a replayed op -- collides instead of duplicating.
+ * djb2 over the fields that identify the event. */
+function rateCalId(ev){
+  const s = ev.date + '|' + (ev.start||'') + '|' + ev.label;
+  let h = 5381;
+  for(let i=0;i<s.length;i++){ h = (((h<<5)+h) ^ s.charCodeAt(i)) >>> 0; }
+  return 'c' + h.toString(36);
+}
+
+/* ---------- storage ---------- */
+const rateReadOps  = ()=>{try{return JSON.parse(localStorage.getItem(RATE_OPS)||'[]');}catch{return[];}};
+const rateWriteOps = o=>localStorage.setItem(RATE_OPS, JSON.stringify(o));
+const rateReadCache = ()=>{try{return JSON.parse(localStorage.getItem(RATE_CACHE)||'{}');}catch{return{};}};
+function rateWriteCache(date, doc, sha){
+  const all = rateReadCache(); all[date] = {doc:doc, sha:sha};
+  /* Keep the cache bounded; the window is 36 days and back-fill is rare. */
+  const keys = Object.keys(all).sort();
+  while(keys.length > 45) delete all[keys.shift()];
+  localStorage.setItem(RATE_CACHE, JSON.stringify(all));
+}
+
+/* Mirror of vault_infra.life.mastery.apply_ops. Idempotent by construction:
+ * `add` is a no-op when the id is present, and rate/happened carry absolute
+ * values rather than deltas, so a 409 replay is safe. */
+function rateApplyOps(doc, ops){
+  for(const op of ops){
+    if(op.date !== doc.date) continue;
+    const blk = doc.blocks[op.block];
+    if(op.op === 'nothing'){
+      if(blk) blk.nothing = !!op.nothing;
+      continue;
+    }
+    if(!blk) continue;
+    if(op.op === 'add'){
+      if(!blk.items.some(i=>i.id===op.item.id)) blk.items.push(op.item);
+      continue;
+    }
+    if(op.op === 'delete'){
+      blk.items = blk.items.filter(i=>i.id!==op.id);
+      continue;
+    }
+    const it = blk.items.find(i=>i.id===op.id);
+    if(!it) continue;                        // deleted elsewhere: legitimate
+    if(op.op === 'rate'){
+      if('m' in op) it.m = op.m;
+      if('p' in op) it.p = op.p;
+      it.rated_at = op.at || new Date().toISOString();
+    } else if(op.op === 'happened'){
+      it.happened = !!op.happened;
+      /* A thing that did not happen cannot carry a mastery or pleasure score;
+       * leaving the old numbers would put a rating on an event that never was. */
+      if(!it.happened){ it.m = null; it.p = null; }
+    } else if(op.op === 'edit'){
+      Object.assign(it, op.patch);
+    }
+  }
+  doc.updated_at = new Date().toISOString();
+  return doc;
+}
+
+async function rateFetch(date){
+  const res = await gh(ratePath(date));
+  if(res.status===404) return {doc:rateBlankDoc(date), sha:null};
+  if(res.status===401||res.status===403) throw Object.assign(new Error('auth'),{status:res.status});
+  if(!res.ok) throw Object.assign(new Error('http'),{status:res.status});
+  const meta = await res.json();
+  return {doc:rateNormalise(JSON.parse(unb64(meta.content)), date), sha:meta.sha};
+}
+
+async function rateLoad(date){
+  const opsFor = () => rateReadOps().filter(o=>o.date===date);
+  const cached = rateReadCache()[date];
+  if(cached){
+    rstate.doc = rateApplyOps(rateNormalise(JSON.parse(JSON.stringify(cached.doc)), date), opsFor());
+    rstate.sha = cached.sha;
+  }else{
+    rstate.doc = rateApplyOps(rateBlankDoc(date), opsFor());
+    rstate.sha = null;
+  }
+  rstate.date = date;
+  try{
+    const got = await rateFetch(date);
+    rateWriteCache(date, got.doc, got.sha);
+    if(rstate.date !== date) return;         // he moved on while this was in flight
+    rstate.doc = rateApplyOps(rateNormalise(JSON.parse(JSON.stringify(got.doc)), date), opsFor());
+    rstate.sha = got.sha;
+  }catch(e){
+    if(e.status===401||e.status===403) throw e;
+  }
+}
+
+function rateQueue(op){
+  op.date = op.date || rstate.date;
+  const ops = rateReadOps(); ops.push(op); rateWriteOps(ops);
+  rateApplyOps(rstate.doc, [op]);
+  rateRender();
+  rateSave(op.date);
+}
+
+async function rateSave(date){
+  const mine = () => rateReadOps().filter(o=>o.date===date);
+  if(!mine().length) return;
+  for(let attempt=0; attempt<3; attempt++){
+    try{
+      const got = await rateFetch(date);
+      const ops = mine();
+      rateApplyOps(got.doc, ops);
+      const body = {message:'rate: ' + date + ' (' + ops.length + ')',
+                    content:b64(JSON.stringify(got.doc,null,2)+'\n')};
+      if(got.sha) body.sha = got.sha;
+      const res = await gh(ratePath(date), {method:'PUT', body:JSON.stringify(body)});
+      if(res.ok){
+        const meta = await res.json();
+        rateWriteCache(date, got.doc, meta.content.sha);
+        /* Drop only this date's ops -- another day may still be queued. */
+        rateWriteOps(rateReadOps().filter(o=>o.date!==date));
+        if(rstate.date===date){ rstate.doc = got.doc; rstate.sha = meta.content.sha; }
+        setStatus('Saved','ok'); rateRender(); return;
+      }
+      if(res.status===409) continue;
+      setStatus('Failed (' + res.status + ')','err'); return;
+    }catch(e){
+      setStatus('Offline - saved on this phone, will sync','err'); return;
+    }
+  }
+  setStatus('Could not sync - your changes are saved locally','err');
+}
+
+/* Any queued day, not just the one on screen -- called when the tab opens. */
+async function rateFlush(){
+  const dates = [...new Set(rateReadOps().map(o=>o.date))];
+  for(const d of dates) await rateSave(d);
+}
+
+/* ---------- recents (device-local) ---------- */
+const rateRecents = ()=>{try{return JSON.parse(localStorage.getItem(RATE_RECENT)||'[]');}catch{return[];}};
+function ratePushRecent(label){
+  const l = label.trim();
+  if(!l) return;
+  const cur = rateRecents().filter(x=>x.toLowerCase()!==l.toLowerCase());
+  cur.unshift(l);
+  localStorage.setItem(RATE_RECENT, JSON.stringify(cur.slice(0, RATE_RECENT_MAX)));
+}
+
+/* ---------- calendar ---------- */
+async function rateCalLoad(){
+  try{
+    const cached = JSON.parse(localStorage.getItem(RATE_CAL)||'null');
+    if(cached) rstate.cal = cached;
+  }catch(e){}
+  try{
+    const res = await gh('/contents/calendar/upcoming.json');
+    if(res.status===404){ rstate.cal = rstate.cal || {events:[]}; return; }
+    if(!res.ok) return;
+    const meta = await res.json();
+    const doc = JSON.parse(unb64(meta.content));
+    rstate.cal = doc;
+    localStorage.setItem(RATE_CAL, JSON.stringify(doc));
+  }catch(e){ /* offline: the cache stands, and no calendar is not an error */ }
+}
+
+const rateCalFor = (date, block) =>
+  ((rstate.cal && rstate.cal.events) || []).filter(e=>e.date===date && e.block===block);
+
+/* Doc items first, then calendar events not yet materialised. */
+function rateViewItems(block){
+  const items = rstate.doc.blocks[block].items;
+  const have = new Set(items.map(i=>i.id));
+  /* Also suppress by label. The id is a hash of date|start|label, so moving an
+   * event in the calendar after it has been rated changes that hash and the row
+   * would come back a second time, unrated, beside the one he already rated.
+   * Both sets are built from the full item list, tombstones included, so a
+   * removed calendar row stays removed. */
+  const seen = new Set(items.map(i=>String(i.label).trim().toLowerCase()));
+  const ghosts = rateCalFor(rstate.date, block)
+    .map(e=>({id:rateCalId(e), label:e.label, source:'calendar',
+              start:e.start||null, m:null, p:null, happened:true, ghost:true}))
+    .filter(g=>!have.has(g.id) && !seen.has(String(g.label).trim().toLowerCase()));
+  return items.filter(i=>!i.hidden).concat(ghosts);
+}
+
+/* A ghost has to exist in the document before it can be rated. */
+function rateMaterialise(block, it){
+  if(!it.ghost) return;
+  const item = Object.assign({}, it);
+  delete item.ghost;
+  rateQueue({op:'add', block:block, item:item});
+}
+
+/* ---------- render ---------- */
+function rateDayLabel(d){
+  const dt = new Date(d+'T12:00:00');
+  const today = isoOf(new Date());
+  const rel = d===today ? 'Today' : (d===addDays(today,-1) ? 'Yesterday' : '');
+  /* Device locale, to match the daily card's own date line rather than sitting
+   * next to it in a different language. */
+  const main = dt.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
+  return {main:main, sub:rel};
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+function rateStrip(kind, val, accent, onPick){
+  const wrap = document.createElement('div');
+  wrap.className = 'striprow';
+  const lb = document.createElement('div');
+  lb.className = 'lb';
+  const shown = (val===null||val===undefined) ? 'not rated' : (val + ' / 10');
+  lb.innerHTML = '<span>' + (kind==='m'?'Mastery':'Pleasure') + '</span><span>' + shown + '</span>';
+  wrap.appendChild(lb);
+  const strip = document.createElement('div');
+  strip.className = 'strip';
+  strip.style.setProperty('--accent', accent);
+  for(let i=0;i<=10;i++){
+    const b = document.createElement('button');
+    b.textContent = i;
+    b.setAttribute('aria-pressed', String(val===i));
+    b.onclick = function(e){ e.stopPropagation(); onPick(val===i ? null : i); };
+    strip.appendChild(b);
+  }
+  wrap.appendChild(strip);
+  return wrap;
+}
+
+function rateRender(){
+  const host = document.querySelector('#rBlocks');
+  if(!host || !rstate.doc) return;
+
+  const lab = rateDayLabel(rstate.date);
+  document.querySelector('#rDayLab').innerHTML =
+    escapeHtml(lab.main) + '<small>' + escapeHtml(lab.sub||'') + '</small>';
+  document.querySelector('#rNext').disabled = rstate.date >= isoOf(new Date());
+  document.querySelector('#rPrev').disabled = rstate.date <= RATE_START;
+
+  host.innerHTML = '';
+  RATE_BLOCKS.forEach(function(block){
+    const blk = rstate.doc.blocks[block];
+    const items = rateViewItems(block);
+    const rated = items.filter(i=>i.happened!==false && i.m!==null && i.m!==undefined
+                                                     && i.p!==null && i.p!==undefined).length;
+
+    const head = document.createElement('div');
+    head.className = 'blockhead';
+    const count = blk.nothing ? 'nothing' : (items.length ? rated + '/' + items.length : '');
+    head.innerHTML = '<span class="t">' + RATE_LABEL[block] + '</span><span class="c">' + count + '</span>';
+    host.appendChild(head);
+
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    items.forEach(function(it){
+      const row = document.createElement('div');
+      row.className = 'act' + (it.happened===false ? ' void' : '');
+
+      const h = document.createElement('div');
+      h.className = 'acthead';
+      const mv = (it.m===null||it.m===undefined) ? '-' : it.m;
+      const pv = (it.p===null||it.p===undefined) ? '-' : it.p;
+      const score = it.happened===false ? 'did not happen'
+                                        : 'M<b>' + mv + '</b> P<b>' + pv + '</b>';
+      /* label and start both originate outside the app -- the calendar export
+       * and free text -- so both go through escapeHtml before interpolation. */
+      h.innerHTML = '<span class="nm">' + (it.start ? escapeHtml(it.start) + '  ' : '') +
+                    escapeHtml(it.label) + '</span>' +
+                    (it.source==='calendar' ? '<span class="src">cal</span>' : '') +
+                    '<span class="sc">' + score + '</span>';
+      h.onclick = function(){
+        rstate.expanded = (rstate.expanded===it.id) ? null : it.id;
+        rateRender();
+      };
+      row.appendChild(h);
+
+      if(rstate.expanded === it.id){
+        if(it.happened !== false){
+          row.appendChild(rateStrip('m', (it.m===undefined?null:it.m), 'var(--study)', function(v){
+            rateMaterialise(block, it);
+            rateQueue({op:'rate', block:block, id:it.id, m:v});
+          }));
+          row.appendChild(rateStrip('p', (it.p===undefined?null:it.p), 'var(--trained)', function(v){
+            rateMaterialise(block, it);
+            rateQueue({op:'rate', block:block, id:it.id, p:v});
+          }));
+        }
+        const acts = document.createElement('div');
+        acts.className = 'actacts';
+
+        const dnh = document.createElement('button');
+        dnh.textContent = it.happened===false ? 'It did happen' : 'Did not happen';
+        if(it.happened===false) dnh.className = 'on';
+        dnh.onclick = function(e){
+          e.stopPropagation();
+          rateMaterialise(block, it);
+          rateQueue({op:'happened', block:block, id:it.id, happened: it.happened===false});
+        };
+        acts.appendChild(dnh);
+
+        const del = document.createElement('button');
+        del.className = 'del'; del.textContent = 'Remove';
+        del.onclick = function(e){
+          e.stopPropagation();
+          rstate.expanded = null;
+          if(it.ghost){
+            /* A removed calendar event has to leave a tombstone, or the next
+             * render re-creates it from the calendar and the removal undoes
+             * itself. `hidden` rows are filtered out of the view. */
+            const tomb = Object.assign({}, it, {ghost:undefined, hidden:true});
+            delete tomb.ghost;
+            rateQueue({op:'add', block:block, item:tomb});
+          }else{
+            rateQueue({op:'delete', block:block, id:it.id});
+          }
+        };
+        acts.appendChild(del);
+        row.appendChild(acts);
+      }
+      card.appendChild(row);
+    });
+
+    const none = document.createElement('div');
+    none.className = 'nothing';
+    none.innerHTML = '<span class="nm">Nothing worth naming</span>';
+    const nb = document.createElement('button');
+    nb.textContent = blk.nothing ? 'Marked' : 'Mark';
+    nb.setAttribute('aria-pressed', String(!!blk.nothing));
+    nb.onclick = function(){ rateQueue({op:'nothing', block:block, nothing: !blk.nothing}); };
+    none.appendChild(nb);
+    card.appendChild(none);
+
+    host.appendChild(card);
+  });
+
+  rateRenderRecents();
+}
+
+function rateRenderRecents(){
+  const host = document.querySelector('#rRecents');
+  if(!host) return;
+  host.innerHTML = '';
+  rateRecents().slice(0,12).forEach(function(l){
+    const b = document.createElement('button');
+    b.textContent = l;
+    b.onclick = function(){ rateAdd(l); };
+    host.appendChild(b);
+  });
+}
+
+const rateBlockNow = function(){
+  const h = new Date().getHours();
+  return h < 12 ? 'morning' : (h < 17 ? 'afternoon' : 'evening');
+};
+
+function rateAdd(label){
+  const field = document.querySelector('#rText');
+  const text = (label !== undefined ? label : field.value).trim();
+  if(!text) return;
+  const block = rstate.addBlock || rateBlockNow();
+  rateQueue({op:'add', block:block,
+             item:{id:rateId(), label:text, source:'manual',
+                   m:null, p:null, happened:true, rated_at:null}});
+  ratePushRecent(text);
+  field.value = '';
+  rateRenderRecents();
+}
+
+function rateSetAddBlock(b){
+  rstate.addBlock = b;
+  document.querySelector('#rBlockPick').querySelectorAll('button')
+    .forEach(function(x){ x.setAttribute('aria-selected', String(x.dataset.b===b)); });
+}
+
+async function rateGoto(date){
+  if(date < RATE_START) return;
+  if(date > isoOf(new Date())) return;
+  rstate.expanded = null;
+  await rateLoad(date);
+  rateRender();
+}
+
+/* ---------- wiring ---------- */
+document.querySelector('#rPrev').onclick = function(){ rateGoto(addDays(rstate.date, -1)); };
+document.querySelector('#rNext').onclick = function(){ rateGoto(addDays(rstate.date,  1)); };
+document.querySelector('#rAdd').onclick  = function(){ rateAdd(); };
+document.querySelector('#rText').addEventListener('keydown', function(e){
+  if(e.key==='Enter') rateAdd();
+});
+document.querySelector('#rBlockPick').querySelectorAll('button').forEach(function(b){
+  b.onclick = function(){ rateSetAddBlock(b.dataset.b); };
+});
+
+document.querySelector('#tabRate').onclick = async function(){
+  tab = 'rate'; paint();
+  try{
+    if(!rstate.date){
+      rateSetAddBlock(rateBlockNow());
+      await rateCalLoad();
+      await rateLoad(isoOf(new Date()));
+    }
+    rateRender();
+    rateFlush();
+  }catch(e){
+    setStatus((e.status===401||e.status===403) ? 'Token rejected' : 'Could not load', 'err');
+  }
+};
+
 </script>
 </body>
 </html>
