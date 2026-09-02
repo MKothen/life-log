@@ -75,6 +75,74 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .seg button{flex:1;padding:7px 0;font-size:14px;font-weight:600;border-radius:7px;color:var(--label)}
 .seg button[aria-selected="true"]{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.12)}
 
+/* mail -- an overview of the six mailboxes, read from mail/overview.json.
+ * Rows follow the Mail app: sender, time on the right, subject, two-line
+ * snippet, an unread dot; a red flag only where a reply is owed. Actions live
+ * behind a disclosure so the list never reads as a wall of buttons. */
+#cardMail{color-scheme:light dark}
+.mailhead{display:flex;align-items:baseline;justify-content:space-between;padding:14px 20px 4px}
+.mailhead h2{font-size:22px;font-weight:700;margin:0;letter-spacing:-.01em}
+.mailasof{font-size:13px;color:var(--label2)}
+.mailasof.stale{color:var(--red)}
+.mailweek{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;padding:6px 16px 14px}
+.mailday{border-radius:10px;background:var(--card);box-shadow:var(--shadow);padding:7px 0 6px;text-align:center}
+.mailday small{display:block;font-size:11px;color:var(--label2);font-weight:600}
+.mailday b{display:block;font-size:17px;font-weight:600;margin-top:1px}
+.mailday .rep{display:inline-block;min-width:16px;height:16px;line-height:16px;border-radius:8px;
+  background:var(--red);color:#fff;font-size:11px;font-weight:700;margin-top:3px;padding:0 4px}
+.mailday .rep.none{visibility:hidden}
+.mailday.today{outline:2px solid var(--blue);outline-offset:-2px}
+.mcal{padding:8px 10px 10px}
+.mcalnav{display:flex;align-items:center;justify-content:space-between;padding:2px 4px 6px}
+.mcalnav b{font-size:17px;font-weight:600}
+.mcalnav button{width:36px;height:36px;border-radius:18px;color:var(--blue);font-size:22px;line-height:1}
+.mcalgrid{display:grid;grid-template-columns:repeat(7,1fr);row-gap:2px}
+.mcalgrid .wd{font-size:11px;color:var(--label2);text-align:center;padding-bottom:4px;font-weight:600}
+.mcell{height:46px;display:flex;flex-direction:column;align-items:center;padding-top:3px;border-radius:10px;font-size:15px;color:var(--text)}
+.mcell.out{color:var(--label2)}
+.mcell .n{width:30px;height:30px;display:grid;place-items:center;border-radius:15px}
+.mcell.sel .n{background:var(--fill2)}
+.mcell.today .n{background:var(--blue);color:#fff;font-weight:600}
+.mdots{display:flex;gap:3px;height:6px;margin-top:2px}
+.mdots i{width:6px;height:6px;border-radius:3px;background:var(--blue)}
+.mdots i.dl{background:var(--red)}
+.mrow{border-top:1px solid var(--sep)}
+.mrow:first-of-type{border-top:0}
+.mrow>summary{list-style:none;display:flex;gap:8px;padding:11px 12px 11px 10px;align-items:flex-start;cursor:pointer}
+.mrow>summary::-webkit-details-marker{display:none}
+.mflag{width:22px;flex:none;display:grid;place-items:center;padding-top:3px;color:var(--label2)}
+.mflag i{width:9px;height:9px;border-radius:5px;background:var(--blue);display:block}
+.mflag svg{width:15px;height:15px}
+.mflag.reply{color:var(--red)} .mflag.dated{color:var(--blue)}
+.mmain{flex:1;min-width:0}
+.mtop{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.mfrom{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mwhen{font-size:13px;color:var(--label2);flex:none}
+.msubj{font-size:15px;line-height:1.3;margin-top:1px}
+.msnip{font-size:13px;color:var(--label);margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mchev{flex:none;color:var(--label2);font-size:20px;line-height:1;padding-top:2px;transition:transform .16s ease}
+.mrow[open]>summary .mchev{transform:rotate(90deg)}
+.macts{padding:0 12px 10px 40px}
+.macts button,.minfo>summary{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;padding:10px 12px;
+  border-radius:10px;background:var(--fill);font-size:15px;color:var(--blue);margin-top:6px;text-align:left;list-style:none;cursor:pointer}
+.minfo>summary::-webkit-details-marker{display:none}
+.macts button svg,.minfo>summary svg{width:18px;height:18px;flex:none}
+.macts button.done{color:var(--label)}
+.macts button:disabled{opacity:.7}
+.mdetail{font-size:13px;color:var(--label);padding:8px 12px 4px;line-height:1.45}
+.mdetail b{color:var(--text);font-weight:600}
+.mdetail .mq{color:var(--label2)}
+.mbulk>summary{padding:12px 14px;font-size:14px;color:var(--label);cursor:pointer;list-style:none}
+.mbulk>summary::-webkit-details-marker{display:none}
+.mempty{color:var(--label);font-size:14px;text-align:center;padding:24px 20px}
+.mempty code{font:inherit;background:var(--fill);padding:1px 6px;border-radius:6px}
+.mtoast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));transform:translate(-50%,8px);
+  background:var(--card);color:var(--text);padding:10px 16px;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.22);
+  font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:50}
+.mtoast.show{opacity:1;transform:translate(-50%,0)}
+.wrap.mailtab{padding-bottom:calc(40px + env(safe-area-inset-bottom))}
+@media (prefers-reduced-motion:reduce){.mchev,.mtoast{transition:none}}
+
 .section-label{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--label);margin:22px 20px 7px}
 .card{background:var(--card);border-radius:12px;margin:0 16px;box-shadow:var(--shadow);overflow:hidden}
 .row{padding:14px 16px;position:relative}
@@ -596,6 +664,23 @@ body.dragging-now{user-select:none;-webkit-user-select:none}
     </div>
   </div>
 
+  <!-- MAIL -->
+  <div id="cardMail" hidden>
+    <div class="mailhead"><h2>Mail</h2><span class="mailasof" id="mailAsOf"></span></div>
+    <div class="mailweek" id="mailWeek"></div>
+    <div class="card"><div class="mcal">
+      <div class="mcalnav">
+        <button id="mcalPrev" aria-label="Previous month">&#8249;</button>
+        <b id="mcalTitle"></b>
+        <button id="mcalNext" aria-label="Next month">&#8250;</button>
+      </div>
+      <div class="mcalgrid" id="mcalGrid"></div>
+    </div></div>
+    <div id="mailAgenda"></div>
+    <div id="mailGroups"></div>
+    <div class="mtoast" id="mailToast" role="status" aria-live="polite"></div>
+  </div>
+
   <!-- TODO -->
   <div id="cardTodo" hidden>
     <div class="seg" role="tablist" id="todoFilter">
@@ -681,6 +766,10 @@ body.dragging-now{user-select:none;-webkit-user-select:none}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
          stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/><circle cx="19" cy="19" r="2.4"/></svg>
     <span>Rate</span></button>
+  <button role="tab" id="tabMail" aria-selected="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+         stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="6" width="17" height="12" rx="2.5"/><path d="m4 7.5 8 5.5 8-5.5"/></svg>
+    <span>Mail</span></button>
 </nav>
 
 <div class="bar" id="bar" hidden>
@@ -851,13 +940,15 @@ function paint(){
   $('#tabEvening').setAttribute('aria-selected',String(tab==='evening'));
   $('#tabTodo').setAttribute('aria-selected',String(tab==='todo'));
   $('#tabRate').setAttribute('aria-selected',String(tab==='rate'));
+  $('#tabMail').setAttribute('aria-selected',String(tab==='mail'));
   $('#cardMorning').hidden = tab!=='morning';
   $('#cardEvening').hidden = tab!=='evening';
   $('#cardTodo').hidden    = tab!=='todo';
   $('#cardRate').hidden    = tab!=='rate';
+  $('#cardMail').hidden    = tab!=='mail';
   /* The week dots and the submit button belong to the daily card only. */
-  $('#dailyExtras').hidden = tab==='todo' || tab==='rate';
-  $('#submitBtn').hidden   = tab==='todo' || tab==='rate';
+  $('#dailyExtras').hidden = tab==='todo' || tab==='rate' || tab==='mail';
+  $('#submitBtn').hidden   = tab==='todo' || tab==='rate' || tab==='mail';
   $('#todoBar').hidden     = tab!=='todo';
   /* Week mode has nothing to add an activity to, so the capture bar and the
    * scroll floor it needs go with it. paint() runs after rateSetMode on a tab
@@ -865,11 +956,13 @@ function paint(){
    * drops the bar on top of the week. */
   const weekMode = (typeof rstate !== 'undefined') && rstate.mode === 'week';
   $('#rateBar').hidden     = tab!=='rate' || weekMode;
-  $('#bar').hidden         = weekMode;
+  /* Mail has nothing to capture, so the bottom bar goes, as in the week view. */
+  $('#bar').hidden         = weekMode || tab==='mail';
   /* Rate carries its own day navigator, so a second date line above it is
    * duplication in the space the header was just removed to free. */
-  $('#topline').hidden     = tab==='rate' || tab==='todo';
+  $('#topline').hidden     = tab==='rate' || tab==='todo' || tab==='mail';
   $('#app').classList.toggle('ratetab', tab==='rate' && !weekMode);
+  $('#app').classList.toggle('mailtab', tab==='mail');
 
   const d=logDate(slot);
   const nice=new Date(d+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
@@ -2870,6 +2963,269 @@ function rateSetMode(mode){
     week ? 'Switch to one day' : 'Switch to the week');
   document.querySelector('#app').classList.toggle('ratetab', !week);
 }
+
+/* ===========================================================================
+ * MAIL  --  overview of the six mailboxes, read from mail/overview.json,
+ * which `just life-mail-export` writes and pushes from the PC. Read-only
+ * here: the phone never touches a mailbox. The only things a tap can produce
+ * are an .ics for the Calendar app and a todo through the Todo tab's own
+ * op queue -- nothing that acts on a mail's say-so.
+ * ======================================================================== */
+const MAIL_KEY = 'lifelog.mail';
+const mstate = {doc:null, month:null, sel:null, added:{}, err:null};
+
+const MAIL_SVG = {
+  flag:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 3v18h2v-6h9.5l-2-4 2-4H8V3z"/></svg>',
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 10h16M8 3v4M16 3v4"/></svg>',
+  todo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 7 15.5 12 9.5M14 8h6M14 16h6"/></svg>',
+  info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8v.5"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>'
+};
+
+/* Subjects and senders are third-party text: always escaped before innerHTML. */
+function mailEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+const mailPad2 = n=>String(n).padStart(2,'0');
+function mailIso(d){ return `${d.getFullYear()}-${mailPad2(d.getMonth()+1)}-${mailPad2(d.getDate())}`; }
+function mailDate(iso){ return new Date(iso+'T12:00:00'); }
+function mailNextDay(iso){ const d=mailDate(iso); d.setDate(d.getDate()+1); return mailIso(d); }
+
+function mailWhen(iso){
+  if(!iso) return '';
+  const d=new Date(iso), today=mailIso(new Date()), that=mailIso(d);
+  if(that===today) return `${mailPad2(d.getHours())}:${mailPad2(d.getMinutes())}`;
+  const diff=(mailDate(today)-mailDate(that))/86400000;
+  if(diff<7) return d.toLocaleDateString(undefined,{weekday:'short'});
+  return d.toLocaleDateString(undefined,{day:'numeric',month:'short'});
+}
+function mailDateLabel(item){
+  let s=mailDate(item.date).toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'});
+  if(item.until) s+=' to '+mailDate(item.until).toLocaleDateString(undefined,{day:'numeric',month:'short'});
+  if(item.time) s+=', '+item.time;
+  return s;
+}
+
+async function mailLoad(){
+  try{ const c=JSON.parse(localStorage.getItem(MAIL_KEY)||'null'); if(c) mstate.doc=c; }catch(e){}
+  try{
+    const res = await gh('/contents/mail/overview.json');
+    if(res.status===404){ mstate.err = mstate.doc ? null : 'none'; return; }
+    if(!res.ok){ mstate.err = mstate.doc ? null : 'http'; return; }
+    const meta = await res.json();
+    mstate.doc = JSON.parse(unb64(meta.content));
+    mstate.err = null;
+    localStorage.setItem(MAIL_KEY, JSON.stringify(mstate.doc));
+  }catch(e){ mstate.err = mstate.doc ? null : 'offline'; }
+}
+
+function mailRender(){
+  const doc=mstate.doc, asOf=$('#mailAsOf');
+  if(!doc){
+    asOf.textContent=''; $('#mailWeek').innerHTML=''; $('#mcalGrid').innerHTML=''; $('#mcalTitle').textContent='';
+    $('#mailAgenda').innerHTML='';
+    $('#mailGroups').innerHTML = `<div class="mempty">${mstate.err==='none'
+      ? 'No overview yet. On the PC, run <code>just life-mail-export</code>.'
+      : 'Could not load the overview. It will appear once the phone can reach GitHub.'}</div>`;
+    return;
+  }
+  const as = doc.as_of ? new Date(doc.as_of) : null;
+  const ageH = as ? (Date.now()-as.getTime())/3600000 : null;
+  asOf.textContent = as ? 'as of '+as.toLocaleDateString(undefined,{weekday:'short'})+' '+mailPad2(as.getHours())+':'+mailPad2(as.getMinutes()) : '';
+  asOf.classList.toggle('stale', ageH!=null && ageH>36);
+  mailRenderWeek(doc); mailRenderCal(doc); mailRenderAgenda(doc); mailRenderGroups(doc);
+}
+
+function mailRenderWeek(doc){
+  const today=mailIso(new Date());
+  $('#mailWeek').innerHTML=(doc.days||[]).map(d=>{
+    const dt=mailDate(d.date);
+    const rep = d.needs_reply ? `<span class="rep">${Number(d.needs_reply)||0}</span>` : '<span class="rep none">0</span>';
+    return `<div class="mailday${d.date===today?' today':''}" title="${Number(d.inbound)||0} received"><small>${dt.toLocaleDateString(undefined,{weekday:'narrow'})}</small><b>${Number(d.inbound)||0}</b>${rep}</div>`;
+  }).join('');
+}
+
+function mailDatesByDay(doc){
+  const by={};
+  (doc.dates||[]).forEach(d=>{
+    (by[d.date]=by[d.date]||[]).push(d);
+    if(d.until && d.until>d.date){
+      const c=mailDate(d.date), u=mailDate(d.until);
+      for(let i=0;i<62;i++){ c.setDate(c.getDate()+1); if(c>u) break; const k=mailIso(c); (by[k]=by[k]||[]).push(d); }
+    }
+  });
+  return by;
+}
+
+function mailRenderCal(doc){
+  if(!mstate.month){ const n=new Date(); mstate.month=new Date(n.getFullYear(),n.getMonth(),1); }
+  const y=mstate.month.getFullYear(), mo=mstate.month.getMonth();
+  $('#mcalTitle').textContent=mstate.month.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  const by=mailDatesByDay(doc);
+  const startDow=(new Date(y,mo,1).getDay()+6)%7;     /* Monday first */
+  const daysIn=new Date(y,mo+1,0).getDate();
+  const today=mailIso(new Date());
+  let html=['M','T','W','T','F','S','S'].map(x=>`<div class="wd">${x}</div>`).join('');
+  const total=Math.ceil((startDow+daysIn)/7)*7;
+  for(let i=0;i<total;i++){
+    const n=i-startDow+1, inMonth=n>=1&&n<=daysIn;
+    const dt=new Date(y,mo,n), iso=mailIso(dt);
+    const dots=(by[iso]||[]).slice(0,3).map(it=>`<i class="${it.kind==='deadline'?'dl':''}"></i>`).join('');
+    html+=`<button class="mcell${inMonth?'':' out'}${iso===today?' today':''}${mstate.sel===iso?' sel':''}" data-d="${iso}" aria-label="${iso}"><span class="n">${dt.getDate()}</span><span class="mdots">${dots}</span></button>`;
+  }
+  const grid=$('#mcalGrid'); grid.innerHTML=html;
+  grid.querySelectorAll('.mcell').forEach(b=>{
+    b.onclick=()=>{ mstate.sel = mstate.sel===b.dataset.d ? null : b.dataset.d; mailRenderCal(mstate.doc); mailRenderAgenda(mstate.doc); };
+  });
+}
+
+function mailThread(doc,id){ return (doc.threads||[]).find(t=>t.id===id)||null; }
+
+function mailRenderAgenda(doc){
+  const box=$('#mailAgenda'), today=mailIso(new Date());
+  let items, title;
+  if(mstate.sel){
+    items=(doc.dates||[]).filter(d=>d.date===mstate.sel || (d.until && d.date<=mstate.sel && mstate.sel<=d.until));
+    title=mailDate(mstate.sel).toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
+  }else{
+    items=(doc.dates||[]).filter(d=>d.date>=today).slice(0,8); title='Upcoming';
+  }
+  if(!items.length){
+    box.innerHTML=`<div class="section-label">${mailEsc(title)}</div><div class="card"><div class="mempty">${mstate.sel?'Nothing on this day':'No dates found in recent mail'}</div></div>`;
+    return;
+  }
+  box.innerHTML=`<div class="section-label">${mailEsc(title)}</div><div class="card" id="mailAgendaList"></div>`;
+  const list=$('#mailAgendaList');
+  items.forEach(d=>list.appendChild(mailDateRow(d, d.thread?mailThread(doc,d.thread):null)));
+}
+
+function mailDateRow(d,t){
+  const el=document.createElement('details'); el.className='mrow';
+  const subj=t?t.subject:(d.what||d.text||'');
+  const who=t?`${t.from_name||t.from}, ${t.account}`:'';
+  el.innerHTML=`<summary><div class="mflag ${d.kind==='deadline'?'reply':'dated'}">${MAIL_SVG.cal}</div>
+    <div class="mmain"><div class="mtop"><span class="mfrom">${mailEsc(mailDateLabel(d))}</span><span class="mwhen">${d.kind==='deadline'?'deadline':''}</span></div>
+    <div class="msubj">${mailEsc(subj)}</div>${who?`<div class="msnip">${mailEsc(who)}</div>`:''}</div><span class="mchev">&#8250;</span></summary>`;
+  el.appendChild(mailActions(t,d));
+  return el;
+}
+
+function mailRenderGroups(doc){
+  const box=$('#mailGroups'); box.innerHTML='';
+  const threads=doc.threads||[];
+  [[3,'Needs a reply'],[2,'Dated or unread'],[1,'For you']].forEach(([p,label])=>{
+    const ts=threads.filter(t=>t.priority===p);
+    if(!ts.length) return;
+    box.insertAdjacentHTML('beforeend',`<div class="section-label">${label}</div>`);
+    const card=document.createElement('div'); card.className='card';
+    ts.forEach(t=>card.appendChild(mailThreadRow(t)));
+    box.appendChild(card);
+  });
+  const bulk=threads.filter(t=>t.priority===0);
+  if(bulk.length){
+    const det=document.createElement('details'); det.className='card mbulk';
+    det.style.marginTop='14px';
+    det.innerHTML=`<summary>Everything else, ${bulk.length} thread${bulk.length===1?'':'s'}</summary>`;
+    bulk.forEach(t=>det.appendChild(mailThreadRow(t)));
+    box.appendChild(det);
+  }
+  if(!threads.length) box.innerHTML='<div class="mempty">Nothing new in the last week</div>';
+}
+
+function mailThreadRow(t){
+  const el=document.createElement('details'); el.className='mrow';
+  const flag = t.needs_reply ? `<div class="mflag reply">${MAIL_SVG.flag}</div>`
+    : (t.dates&&t.dates.length ? `<div class="mflag dated">${MAIL_SVG.cal}</div>`
+    : `<div class="mflag">${t.unread?'<i></i>':''}</div>`);
+  el.innerHTML=`<summary>${flag}<div class="mmain"><div class="mtop"><span class="mfrom">${mailEsc(t.from_name||t.from)}</span><span class="mwhen">${mailEsc(mailWhen(t.last))}</span></div>
+    <div class="msubj">${mailEsc(t.subject)}</div>${t.snippet?`<div class="msnip">${mailEsc(t.snippet)}</div>`:''}</div><span class="mchev">&#8250;</span></summary>`;
+  el.appendChild(mailActions(t, (t.dates&&t.dates[0])||null));
+  return el;
+}
+
+function mailActions(t,d){
+  const box=document.createElement('div'); box.className='macts';
+  const key=(t?t.id:'d')+'|'+(d?d.date+(d.time||''):'');
+  if(d){
+    const b=document.createElement('button'); b.type='button';
+    b.innerHTML=MAIL_SVG.cal+'<span>Add to Calendar</span>';
+    b.onclick=e=>{ e.preventDefault(); mailAddCal(t,d); };
+    box.appendChild(b);
+  }
+  if(t){
+    const b=document.createElement('button'); b.type='button';
+    const done=!!mstate.added[key];
+    b.innerHTML=(done?MAIL_SVG.check:MAIL_SVG.todo)+`<span>${done?'Added to Todo':'Add to Todo'}</span>`;
+    if(done){ b.classList.add('done'); b.disabled=true; }
+    b.onclick=e=>{ e.preventDefault(); mailAddTodo(t,d,b,key); };
+    box.appendChild(b);
+    const info=document.createElement('details'); info.className='minfo';
+    const dates=(t.dates||[]).map(x=>mailDateLabel(x)+(x.text?` (${x.text})`:'')).join('; ');
+    const last=t.last?new Date(t.last).toLocaleString(undefined,{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+    info.innerHTML=`<summary>${MAIL_SVG.info}<span>Details</span></summary>
+      <div class="mdetail"><b>${mailEsc(t.from_name||'')}</b> ${mailEsc(t.from)}<br>${mailEsc(t.account)}, ${Number(t.n)||1} message${Number(t.n)===1?'':'s'}, last ${mailEsc(last)}${dates?`<br>${mailEsc(dates)}`:''}${d&&d.what?`<br><span class="mq">${mailEsc(d.what)}</span>`:''}</div>`;
+    box.appendChild(info);
+  }
+  return box;
+}
+
+/* --- add to the phone's Calendar: an .ics through the share sheet, else a download --- */
+function mailIcs(t,d){
+  const esc=s=>String(s||'').replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/[,;]/g,m=>'\\'+m);
+  const ymd=s=>s.replace(/-/g,'');
+  const stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+Z$/,'Z');
+  const uid=`mail-${(t?t.id:'d')}-${d.date}${d.time?d.time.replace(':',''):''}@life-log`;
+  let when;
+  if(d.time){
+    const [h,m]=d.time.split(':').map(Number);
+    const end=`${mailPad2((h+1)%24)}${mailPad2(m)}`;
+    when=`DTSTART:${ymd(d.date)}T${mailPad2(h)}${mailPad2(m)}00\r\nDTEND:${ymd(d.date)}T${end}00`;
+  }else{
+    when=`DTSTART;VALUE=DATE:${ymd(d.date)}\r\nDTEND;VALUE=DATE:${ymd(mailNextDay(d.until||d.date))}`;
+  }
+  const summary=t?t.subject:(d.what||d.text||'From mail');
+  const desc=[t?`From ${t.from_name||t.from} (${t.account})`:'', d.text?`Mentioned as: ${d.text}`:'', d.what||''].filter(Boolean).join('\n');
+  return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//life-log//mail//EN','BEGIN:VEVENT',
+    `UID:${uid}`,`DTSTAMP:${stamp}`,when,`SUMMARY:${esc(summary)}`,`DESCRIPTION:${esc(desc)}`,
+    'END:VEVENT','END:VCALENDAR'].join('\r\n');
+}
+async function mailAddCal(t,d){
+  const ics=mailIcs(t,d);
+  try{
+    const file=new File([ics],'event.ics',{type:'text/calendar'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], title: t?t.subject:'Event'});
+      return;
+    }
+  }catch(e){ if(e && e.name==='AbortError') return; }
+  const a=document.createElement('a');
+  a.href='data:text/calendar;charset=utf-8,'+encodeURIComponent(ics);
+  a.download='event.ics'; document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* --- add to the Todo tab through its own queue: same item shape as todoAdd() --- */
+async function mailAddTodo(t,d,btn,key){
+  if(typeof tstate==='undefined'){ mailToast('Todo is not available'); return; }
+  if(!tstate.doc){ try{ await todoLoad(); }catch(e){} }
+  if(!tstate.doc){ mailToast('Could not open the todo list'); return; }
+  const inst = t.account==='EUR' || t.account==='Erasmus MC';
+  const item={ id:todoId(tstate.doc), text:t.subject.slice(0,200), cat: inst?'uni':'personal',
+    due: d?d.date:null, prio: t.needs_reply?1:2,
+    note:`Mail from ${t.from_name||t.from} (${t.account})${d&&d.text?`, ${d.text}`:''}`.slice(0,300),
+    done:false, created_at:new Date().toISOString(), done_at:null, reviewed_at:null };
+  todoQueue({op:'add', at:new Date().toISOString(), item});
+  mstate.added[key]=true;
+  btn.innerHTML=MAIL_SVG.check+'<span>Added to Todo</span>'; btn.classList.add('done'); btn.disabled=true;
+  mailToast('Added to Todo');
+}
+
+let _mailToastT=null;
+function mailToast(msg){
+  const el=$('#mailToast'); el.textContent=msg; el.classList.add('show');
+  clearTimeout(_mailToastT); _mailToastT=setTimeout(()=>el.classList.remove('show'),1600);
+}
+
+$('#tabMail').onclick = async()=>{ tab='mail'; paint(); mailRender(); await mailLoad(); mailRender(); };
+$('#mcalPrev').onclick = ()=>{ if(!mstate.doc) return; const m=mstate.month||new Date(); mstate.month=new Date(m.getFullYear(),m.getMonth()-1,1); mailRenderCal(mstate.doc); mailRenderAgenda(mstate.doc); };
+$('#mcalNext').onclick = ()=>{ if(!mstate.doc) return; const m=mstate.month||new Date(); mstate.month=new Date(m.getFullYear(),m.getMonth()+1,1); mailRenderCal(mstate.doc); mailRenderAgenda(mstate.doc); };
 
 document.querySelector('#tabRate').onclick = async function(){
   tab = 'rate'; paint();
