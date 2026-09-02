@@ -3315,7 +3315,8 @@ function mailRenderThreads(){
 function mailThreadRow(t){
   const m=t.meta||{};
   const el=document.createElement('details'); el.className='mrow'; el.dataset.tid=t.id;
-  const flag=(t.priority===3||m.needs_reply) ? `<div class="mflag reply">${MAIL_SVG.flag}</div>`
+  /* the flag follows the review's priority, not the store's awaiting-reply guess */
+  const flag=(t.priority===3) ? `<div class="mflag reply">${MAIL_SVG.flag}</div>`
     : ((m.dates&&m.dates.length) ? `<div class="mflag dated">${MAIL_SVG.cal}</div>` : '<div class="mflag"></div>');
   el.innerHTML=`<summary>${flag}<div class="mmain"><div class="mtop"><span class="mfrom">${mailEsc(m.from_name||m.from||'')}</span><span class="mwhen">${mailEsc(mailWhen(m.last))}</span></div>
     <div class="msubj">${mailEsc(m.subject||'')}</div><div class="msnip">${mailEsc(t.summary||'')}</div></div><span class="mchev">&#8250;</span></summary>`;
