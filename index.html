@@ -84,14 +84,36 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .mailhead h2{font-size:22px;font-weight:700;margin:0;letter-spacing:-.01em}
 .mailasof{font-size:13px;color:var(--label2)}
 .mailasof.stale{color:var(--red)}
-.mailweek{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;padding:6px 16px 14px}
-.mailday{border-radius:10px;background:var(--card);box-shadow:var(--shadow);padding:7px 0 6px;text-align:center}
+/* the review card: the page's actual content */
+.mrev{padding:14px 16px 12px}
+.mrevtitle{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--label2)}
+.mrevtitle b{font-size:17px;font-weight:700;color:var(--text)}
+.mrevhead{font-size:16px;line-height:1.4;margin:8px 0 2px;font-weight:500}
+.mrev h4{font-size:13px;font-weight:600;color:var(--label2);margin:14px 0 2px}
+.mrev ul{list-style:none;margin:0;padding:0}
+.mrev li{position:relative;padding:6px 0 6px 14px;font-size:15px;line-height:1.4;border-top:1px solid var(--sep)}
+.mrev li:first-child{border-top:0}
+.mrev li::before{content:"";position:absolute;left:0;top:14px;width:5px;height:5px;border-radius:3px;background:var(--label2)}
+.mref{color:var(--blue);text-decoration:none;font-weight:500}
+.mref.gone{color:var(--label2)}
+.mdue{display:inline-block;margin-left:6px;font-size:12px;color:var(--red);font-weight:600}
+/* the week, folded */
+.mweek{margin-top:12px}
+.mweek>summary{list-style:none;cursor:pointer;padding:12px 16px 10px}
+.mweek>summary::-webkit-details-marker{display:none}
+.mweekhead{display:flex;justify-content:space-between;align-items:center;font-size:17px;font-weight:600}
+.mweeksub{font-size:14px;color:var(--label);margin-top:2px;line-height:1.35}
+.mweek[open] .mweekhead .mchev{transform:rotate(90deg)}
+.mweek .mrev{padding-top:0}
+.mailweek{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;padding:4px 12px 8px}
+.mailday{border-radius:10px;background:var(--fill);padding:7px 0 6px;text-align:center}
 .mailday small{display:block;font-size:11px;color:var(--label2);font-weight:600}
 .mailday b{display:block;font-size:17px;font-weight:600;margin-top:1px}
 .mailday .rep{display:inline-block;min-width:16px;height:16px;line-height:16px;border-radius:8px;
-  background:var(--red);color:#fff;font-size:11px;font-weight:700;margin-top:3px;padding:0 4px}
+  background:var(--red);color:#fff;font-size:11px;font-weight:700;padding:0 4px;margin-top:3px}
 .mailday .rep.none{visibility:hidden}
 .mailday.today{outline:2px solid var(--blue);outline-offset:-2px}
+/* calendar */
 .mcal{padding:8px 10px 10px}
 .mcalnav{display:flex;align-items:center;justify-content:space-between;padding:2px 4px 6px}
 .mcalnav b{font-size:17px;font-weight:600}
@@ -106,12 +128,13 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .mdots{display:flex;gap:3px;height:6px;margin-top:2px}
 .mdots i{width:6px;height:6px;border-radius:3px;background:var(--blue)}
 .mdots i.dl{background:var(--red)}
-.mrow{border-top:1px solid var(--sep)}
+/* rows */
+.mrow{border-top:1px solid var(--sep);transition:background .6s}
 .mrow:first-of-type{border-top:0}
+.mrow.hl{background:var(--fill2)}
 .mrow>summary{list-style:none;display:flex;gap:8px;padding:11px 12px 11px 10px;align-items:flex-start;cursor:pointer}
 .mrow>summary::-webkit-details-marker{display:none}
 .mflag{width:22px;flex:none;display:grid;place-items:center;padding-top:3px;color:var(--label2)}
-.mflag i{width:9px;height:9px;border-radius:5px;background:var(--blue);display:block}
 .mflag svg{width:15px;height:15px}
 .mflag.reply{color:var(--red)} .mflag.dated{color:var(--blue)}
 .mmain{flex:1;min-width:0}
@@ -120,26 +143,34 @@ button{border:0;background:none;padding:0;cursor:pointer}
 .mwhen{font-size:13px;color:var(--label2);flex:none}
 .msubj{font-size:15px;line-height:1.3;margin-top:1px}
 .msnip{font-size:13px;color:var(--label);margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mrow[open] .msnip{-webkit-line-clamp:unset;display:block}
 .mchev{flex:none;color:var(--label2);font-size:20px;line-height:1;padding-top:2px;transition:transform .16s ease}
 .mrow[open]>summary .mchev{transform:rotate(90deg)}
-.macts{padding:0 12px 10px 40px}
-.macts button,.minfo>summary{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;padding:10px 12px;
-  border-radius:10px;background:var(--fill);font-size:15px;color:var(--blue);margin-top:6px;text-align:left;list-style:none;cursor:pointer}
-.minfo>summary::-webkit-details-marker{display:none}
-.macts button svg,.minfo>summary svg{width:18px;height:18px;flex:none}
+/* the opened row: my notes, then the actions */
+.mpanel{padding:0 12px 10px 40px;font-size:14px;line-height:1.45;color:var(--text)}
+.mpanel p{margin:4px 0 8px}
+.mpanel p b{display:block;font-size:12px;font-weight:600;color:var(--label2);margin-bottom:1px}
+.mpanel .mmeta{font-size:12px;color:var(--label2);margin:6px 0 4px}
+.mreply{margin:6px 0 8px;padding:10px 12px;border-radius:10px;background:var(--fill)}
+.mreply b{display:block;font-size:12px;color:var(--label2);font-weight:600;margin-bottom:4px}
+.mreply .mq{white-space:pre-wrap;color:var(--text)}
+.mreply .mcopy{margin-top:8px;display:flex;align-items:center;gap:6px;color:var(--blue);font-size:14px;font-weight:500;padding:0;background:none}
+.mreply .mcopy svg{width:16px;height:16px}
+.macts{padding:4px 0 0}
+.macts button{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;padding:10px 12px;
+  border-radius:10px;background:var(--fill);color:var(--text);font-size:15px;text-align:left;margin-top:6px}
+.macts button svg{width:18px;height:18px;flex:none}
 .macts button.done{color:var(--label)}
 .macts button:disabled{opacity:.7}
-.mdetail{font-size:13px;color:var(--label);padding:8px 12px 4px;line-height:1.45}
-.mdetail b{color:var(--text);font-weight:600}
-.mdetail .mq{color:var(--label2)}
-.mbulk>summary{padding:12px 14px;font-size:14px;color:var(--label);cursor:pointer;list-style:none}
-.mbulk>summary::-webkit-details-marker{display:none}
+.macts button.rm{color:var(--red)}
+.mfoot{font-size:13px;color:var(--label2);text-align:center;padding:14px 20px 4px}
 .mempty{color:var(--label);font-size:14px;text-align:center;padding:24px 20px}
 .mempty code{font:inherit;background:var(--fill);padding:1px 6px;border-radius:6px}
 .mtoast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));transform:translate(-50%,8px);
   background:var(--card);color:var(--text);padding:10px 16px;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.22);
-  font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:50}
-.mtoast.show{opacity:1;transform:translate(-50%,0)}
+  font-size:14px;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:40;white-space:nowrap}
+.mtoast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.mtoast button{margin-left:14px;color:var(--blue);font-weight:600;font-size:15px;background:none;padding:0}
 .wrap.mailtab{padding-bottom:calc(40px + env(safe-area-inset-bottom))}
 @media (prefers-reduced-motion:reduce){.mchev,.mtoast{transition:none}}
 
@@ -664,11 +695,13 @@ body.dragging-now{user-select:none;-webkit-user-select:none}
     </div>
   </div>
 
-  <!-- MAIL -->
+  <!-- MAIL: the in-session review, rendered. Data: mail/review.json (my judgement),
+       mail/overview.json (dates and counts), mail/dismissed.json (what Max removed). -->
   <div id="cardMail" hidden>
     <div class="mailhead"><h2>Mail</h2><span class="mailasof" id="mailAsOf"></span></div>
-    <div class="mailweek" id="mailWeek"></div>
-    <div class="card"><div class="mcal">
+    <div id="mailReview"></div>
+    <div id="mailWeekly"></div>
+    <div class="card" style="margin-top:12px"><div class="mcal">
       <div class="mcalnav">
         <button id="mcalPrev" aria-label="Previous month">&#8249;</button>
         <b id="mcalTitle"></b>
@@ -677,7 +710,7 @@ body.dragging-now{user-select:none;-webkit-user-select:none}
       <div class="mcalgrid" id="mcalGrid"></div>
     </div></div>
     <div id="mailAgenda"></div>
-    <div id="mailGroups"></div>
+    <div id="mailThreads"></div>
     <div class="mtoast" id="mailToast" role="status" aria-live="polite"></div>
   </div>
 
@@ -2971,24 +3004,40 @@ function rateSetMode(mode){
  * are an .ics for the Calendar app and a todo through the Todo tab's own
  * op queue -- nothing that acts on a mail's say-so.
  * ======================================================================== */
-const MAIL_KEY = 'lifelog.mail';
-const mstate = {doc:null, month:null, sel:null, added:{}, err:null};
+/* ===========================================================================
+ * MAIL  --  the in-session review, rendered on the phone.
+ *
+ * Three files in the data repo, all written on the PC except the last:
+ *   mail/review.json    my daily and weekly review: headline, sections of
+ *                       sentences that name the threads they refer to
+ *                       ([[thread_id]] tokens), and one entry per thread with
+ *                       summary / context / implications / suggested reply,
+ *                       enriched with subject, sender, account and dates.
+ *   mail/overview.json  deterministic: extracted dates, the 7-day strip, counts.
+ *   mail/dismissed.json what Max removed here; the PC honours it on the next
+ *                       export and review, so a removed thread stays gone.
+ * The thread list shows ONLY threads the review wrote about. Everything else
+ * is a count. Subjects, senders and my prose are escaped before innerHTML.
+ * =========================================================================== */
+const MAIL_KEY  = 'lifelog.mail';          // {ov, rv, dis} last server state
+const MAIL_DISQ = 'lifelog.maildismissq';  // dismissals not yet written to the data repo
+const MAIL_DIS_PATH = '/contents/mail/dismissed.json';
+const mstate = {ov:null, rv:null, dis:{}, month:null, sel:null, added:{}, err:null, weekOpen:false};
 
 const MAIL_SVG = {
   flag:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 3v18h2v-6h9.5l-2-4 2-4H8V3z"/></svg>',
   cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 10h16M8 3v4M16 3v4"/></svg>',
   todo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 7 15.5 12 9.5M14 8h6M14 16h6"/></svg>',
-  info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8v.5"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+  copy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>',
   check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>'
 };
 
-/* Subjects and senders are third-party text: always escaped before innerHTML. */
 function mailEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 const mailPad2 = n=>String(n).padStart(2,'0');
 function mailIso(d){ return `${d.getFullYear()}-${mailPad2(d.getMonth()+1)}-${mailPad2(d.getDate())}`; }
 function mailDate(iso){ return new Date(iso+'T12:00:00'); }
 function mailNextDay(iso){ const d=mailDate(iso); d.setDate(d.getDate()+1); return mailIso(d); }
-
 function mailWhen(iso){
   if(!iso) return '';
   const d=new Date(iso), today=mailIso(new Date()), that=mailIso(d);
@@ -3003,49 +3052,171 @@ function mailDateLabel(item){
   if(item.time) s+=', '+item.time;
   return s;
 }
+function mailDueLabel(iso){
+  const today=mailIso(new Date());
+  if(iso===today) return 'today';
+  if(iso===mailNextDay(today)) return 'tomorrow';
+  return mailDate(iso).toLocaleDateString(undefined,{day:'numeric',month:'short'});
+}
+
+/* --- data ------------------------------------------------------------------ */
+async function mailFetchJson(path){
+  const res=await gh(path);
+  if(res.status===404) return {doc:null, sha:null};
+  if(!res.ok) throw Object.assign(new Error('http'),{status:res.status});
+  const meta=await res.json();
+  return {doc:JSON.parse(unb64(meta.content)), sha:meta.sha};
+}
+function mailReadCache(){ try{ return JSON.parse(localStorage.getItem(MAIL_KEY)||'null'); }catch(e){ return null; } }
+function mailReadDisq(){ try{ return JSON.parse(localStorage.getItem(MAIL_DISQ)||'[]'); }catch(e){ return []; } }
+function mailWriteDisq(q){ localStorage.setItem(MAIL_DISQ, JSON.stringify(q)); }
 
 async function mailLoad(){
-  try{ const c=JSON.parse(localStorage.getItem(MAIL_KEY)||'null'); if(c) mstate.doc=c; }catch(e){}
+  const c=mailReadCache();
+  if(c){ mstate.ov=c.ov||null; mstate.rv=c.rv||null; mstate.dis={...(c.dis||{})}; }
+  mailReadDisq().forEach(d=>{ mstate.dis[d.id]=d.at; });
   try{
-    const res = await gh('/contents/mail/overview.json');
-    if(res.status===404){ mstate.err = mstate.doc ? null : 'none'; return; }
-    if(!res.ok){ mstate.err = mstate.doc ? null : 'http'; return; }
-    const meta = await res.json();
-    mstate.doc = JSON.parse(unb64(meta.content));
-    mstate.err = null;
-    localStorage.setItem(MAIL_KEY, JSON.stringify(mstate.doc));
-  }catch(e){ mstate.err = mstate.doc ? null : 'offline'; }
+    const [ov, rv, dis]=await Promise.all([
+      mailFetchJson('/contents/mail/overview.json'),
+      mailFetchJson('/contents/mail/review.json'),
+      mailFetchJson(MAIL_DIS_PATH)]);
+    mstate.ov=ov.doc; mstate.rv=rv.doc;
+    const server={};
+    ((dis.doc&&dis.doc.items)||[]).forEach(it=>{ if(it&&it.id) server[it.id]=it.at||''; });
+    mstate.dis={...server};
+    mailReadDisq().forEach(d=>{ mstate.dis[d.id]=d.at; });
+    mstate.err=null;
+    localStorage.setItem(MAIL_KEY, JSON.stringify({ov:mstate.ov, rv:mstate.rv, dis:server}));
+    if(mailReadDisq().length) mailDismissFlush(0);
+  }catch(e){
+    mstate.err=(mstate.ov||mstate.rv) ? null : ((e.status===401||e.status===403) ? 'auth' : 'offline');
+  }
 }
 
+/* --- the threads the review wrote about (daily wins over weekly), minus removed --- */
+function mailThreads(){
+  const out={}, rv=mstate.rv||{};
+  [rv.weekly, rv.daily].forEach(r=>{
+    if(!r||!r.threads) return;
+    Object.entries(r.threads).forEach(([id,t])=>{ out[id]={...t, id, meta:t.meta||{}}; });
+  });
+  Object.keys(mstate.dis).forEach(id=>{ delete out[id]; });
+  return out;
+}
+function mailThreadList(){
+  return Object.values(mailThreads()).sort((a,b)=>
+    ((b.priority||0)-(a.priority||0)) || String(b.meta.last||'').localeCompare(String(a.meta.last||'')));
+}
+/* a row's label, whether it comes from the review or only from the overview */
+function mailLabel(tid){
+  const t=mailThreads()[tid];
+  if(t) return {id:tid, ...t.meta, summary:t.summary||''};
+  const o=((mstate.ov&&mstate.ov.threads)||[]).find(x=>x.id===tid);
+  return o ? {id:tid, ...o, summary:''} : null;
+}
+function mailAllDates(){
+  let ds=(mstate.ov&&mstate.ov.dates)||[];
+  if(!ds.length){
+    ds=[];
+    Object.values(mailThreads()).forEach(t=>(t.meta.dates||[]).forEach(d=>ds.push({...d, thread:t.id})));
+  }
+  return ds.filter(d=>!(d.thread && mstate.dis[d.thread]));
+}
+
+/* --- review text: [[tid]] and [[tid|label]] become links to the thread row --- */
+const MAIL_TOKEN=/\[\[([A-Za-z0-9_-]+)(?:\|([^\]]*))?\]\]/g;
+function mailTokenIds(text){ const out=[]; let m; MAIL_TOKEN.lastIndex=0; while((m=MAIL_TOKEN.exec(text||''))) out.push(m[1]); return out; }
+function mailRefHtml(tid, label){
+  const t=mailThreads()[tid];
+  const name=label || (t ? (t.meta.from_name||t.meta.from||'this thread') : 'this thread');
+  if(!t) return `<span class="mref gone">${mailEsc(name)}</span>`;
+  return `<a class="mref" href="#" data-tid="${mailEsc(tid)}">${mailEsc(name)}</a>`;
+}
+function mailRich(text){
+  /* escape first; tokens carry only [A-Za-z0-9_-|] so they survive escaping */
+  return mailEsc(text).replace(MAIL_TOKEN, (m,tid,label)=>mailRefHtml(tid, label||''));
+}
+function mailItemGone(it){
+  const ids=[...(it.threads||[]), ...mailTokenIds(it.text)];
+  return ids.length>0 && ids.every(id=>mstate.dis[id]);
+}
+function mailSections(r){
+  return (r.sections||[]).map(sec=>{
+    const items=(sec.items||[]).filter(it=>!mailItemGone(it));
+    if(!items.length) return '';
+    return `<h4>${mailEsc(sec.title)}</h4><ul>${items.map(it=>{
+      const extra=(it.threads||[]).filter(t=>!String(it.text||'').includes('[['+t)).map(t=>mailRefHtml(t,''));
+      return `<li>${mailRich(it.text)}${extra.length?' '+extra.join(', '):''}${it.due?`<span class="mdue">${mailEsc(mailDueLabel(it.due))}</span>`:''}</li>`;
+    }).join('')}</ul>`;
+  }).join('');
+}
+function mailBindRefs(root){
+  root.querySelectorAll('a.mref').forEach(a=>{ a.onclick=e=>{ e.preventDefault(); e.stopPropagation(); mailJump(a.dataset.tid); }; });
+}
+function mailJump(tid){
+  const row=document.querySelector(`.mrow[data-tid="${tid}"]`);
+  if(!row){ mailToast('Not in the list'); return; }
+  row.open=true;
+  row.scrollIntoView({behavior:'smooth', block:'center'});
+  row.classList.add('hl'); setTimeout(()=>row.classList.remove('hl'),1600);
+}
+
+/* --- render ------------------------------------------------------------------ */
 function mailRender(){
-  const doc=mstate.doc, asOf=$('#mailAsOf');
-  if(!doc){
-    asOf.textContent=''; $('#mailWeek').innerHTML=''; $('#mcalGrid').innerHTML=''; $('#mcalTitle').textContent='';
-    $('#mailAgenda').innerHTML='';
-    $('#mailGroups').innerHTML = `<div class="mempty">${mstate.err==='none'
-      ? 'No overview yet. On the PC, run <code>just life-mail-export</code>.'
-      : 'Could not load the overview. It will appear once the phone can reach GitHub.'}</div>`;
+  const asOf=$('#mailAsOf'), rv=mstate.rv, ov=mstate.ov;
+  if(!rv && !ov){
+    asOf.textContent='';
+    $('#mailReview').innerHTML=`<div class="mempty">${
+      mstate.err==='auth' ? 'Token rejected'
+      : mstate.err==='offline' ? 'Could not reach GitHub. Cached pages appear once one has loaded.'
+      : 'No review yet. On the PC: <code>just life-mail-review-prep</code>, write it, <code>just life-mail-review-publish</code>.'}</div>`;
+    $('#mailWeekly').innerHTML=''; $('#mcalGrid').innerHTML=''; $('#mcalTitle').textContent='';
+    $('#mailAgenda').innerHTML=''; $('#mailThreads').innerHTML='';
     return;
   }
-  const as = doc.as_of ? new Date(doc.as_of) : null;
-  const ageH = as ? (Date.now()-as.getTime())/3600000 : null;
-  asOf.textContent = as ? 'as of '+as.toLocaleDateString(undefined,{weekday:'short'})+' '+mailPad2(as.getHours())+':'+mailPad2(as.getMinutes()) : '';
+  const stamp=(rv&&rv.updated_at) ? new Date(rv.updated_at) : (ov&&ov.as_of ? new Date(ov.as_of) : null);
+  const ageH=stamp ? (Date.now()-stamp.getTime())/3600000 : null;
+  asOf.textContent=stamp ? `${rv&&rv.updated_at?'reviewed':'as of'} ${stamp.toLocaleDateString(undefined,{weekday:'short'})} ${mailPad2(stamp.getHours())}:${mailPad2(stamp.getMinutes())}` : '';
   asOf.classList.toggle('stale', ageH!=null && ageH>36);
-  mailRenderWeek(doc); mailRenderCal(doc); mailRenderAgenda(doc); mailRenderGroups(doc);
+  mailRenderReview(); mailRenderWeekly(); mailRenderCal(); mailRenderAgenda(); mailRenderThreads();
 }
 
-function mailRenderWeek(doc){
+function mailRenderReview(){
+  const box=$('#mailReview'), d=mstate.rv&&mstate.rv.daily;
+  if(!d){
+    box.innerHTML=`<div class="card mrev"><div class="mrevtitle"><b>Today</b></div><div class="mempty">No daily review yet.</div></div>`;
+    return;
+  }
+  const when=mailDate(d.date).toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
+  const isToday=d.date===mailIso(new Date());
+  box.innerHTML=`<div class="card mrev"><div class="mrevtitle"><b>${isToday?'Today':'Last review'}</b><span>${mailEsc(when)}</span></div>
+    <p class="mrevhead">${mailRich(d.headline)}</p>${mailSections(d)}</div>`;
+  mailBindRefs(box);
+}
+
+function mailWeekCells(ov){
   const today=mailIso(new Date());
-  $('#mailWeek').innerHTML=(doc.days||[]).map(d=>{
+  return (ov.days||[]).map(d=>{
     const dt=mailDate(d.date);
-    const rep = d.needs_reply ? `<span class="rep">${Number(d.needs_reply)||0}</span>` : '<span class="rep none">0</span>';
+    const rep=d.needs_reply ? `<span class="rep">${Number(d.needs_reply)||0}</span>` : '<span class="rep none">0</span>';
     return `<div class="mailday${d.date===today?' today':''}" title="${Number(d.inbound)||0} received"><small>${dt.toLocaleDateString(undefined,{weekday:'narrow'})}</small><b>${Number(d.inbound)||0}</b>${rep}</div>`;
   }).join('');
 }
+function mailRenderWeekly(){
+  const box=$('#mailWeekly'), w=mstate.rv&&mstate.rv.weekly, ov=mstate.ov;
+  if(!w && !(ov&&ov.days&&ov.days.length)){ box.innerHTML=''; return; }
+  const det=document.createElement('details'); det.className='card mweek'; det.open=!!mstate.weekOpen;
+  det.addEventListener('toggle',()=>{ mstate.weekOpen=det.open; });
+  const strip=(ov&&ov.days&&ov.days.length) ? `<div class="mailweek">${mailWeekCells(ov)}</div>` : '';
+  det.innerHTML=`<summary><div class="mweekhead"><span>This week</span><span class="mchev">&#8250;</span></div>
+    <div class="mweeksub">${w ? mailRich(w.headline) : 'No weekly review yet.'}</div></summary>
+    ${strip}<div class="mrev">${w ? mailSections(w) : ''}</div>`;
+  box.innerHTML=''; box.appendChild(det); mailBindRefs(det);
+}
 
-function mailDatesByDay(doc){
+function mailDatesByDay(){
   const by={};
-  (doc.dates||[]).forEach(d=>{
+  mailAllDates().forEach(d=>{
     (by[d.date]=by[d.date]||[]).push(d);
     if(d.until && d.until>d.date){
       const c=mailDate(d.date), u=mailDate(d.until);
@@ -3054,12 +3225,11 @@ function mailDatesByDay(doc){
   });
   return by;
 }
-
-function mailRenderCal(doc){
+function mailRenderCal(){
   if(!mstate.month){ const n=new Date(); mstate.month=new Date(n.getFullYear(),n.getMonth(),1); }
   const y=mstate.month.getFullYear(), mo=mstate.month.getMonth();
   $('#mcalTitle').textContent=mstate.month.toLocaleDateString(undefined,{month:'long',year:'numeric'});
-  const by=mailDatesByDay(doc);
+  const by=mailDatesByDay();
   const startDow=(new Date(y,mo,1).getDay()+6)%7;     /* Monday first */
   const daysIn=new Date(y,mo+1,0).getDate();
   const today=mailIso(new Date());
@@ -3073,106 +3243,156 @@ function mailRenderCal(doc){
   }
   const grid=$('#mcalGrid'); grid.innerHTML=html;
   grid.querySelectorAll('.mcell').forEach(b=>{
-    b.onclick=()=>{ mstate.sel = mstate.sel===b.dataset.d ? null : b.dataset.d; mailRenderCal(mstate.doc); mailRenderAgenda(mstate.doc); };
+    b.onclick=()=>{ mstate.sel = mstate.sel===b.dataset.d ? null : b.dataset.d; mailRenderCal(); mailRenderAgenda(); };
   });
 }
 
-function mailThread(doc,id){ return (doc.threads||[]).find(t=>t.id===id)||null; }
-
-function mailRenderAgenda(doc){
-  const box=$('#mailAgenda'), today=mailIso(new Date());
+function mailRenderAgenda(){
+  const box=$('#mailAgenda'), today=mailIso(new Date()), all=mailAllDates();
   let items, title;
   if(mstate.sel){
-    items=(doc.dates||[]).filter(d=>d.date===mstate.sel || (d.until && d.date<=mstate.sel && mstate.sel<=d.until));
+    items=all.filter(d=>d.date===mstate.sel || (d.until && d.date<=mstate.sel && mstate.sel<=d.until));
     title=mailDate(mstate.sel).toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
   }else{
-    items=(doc.dates||[]).filter(d=>d.date>=today).slice(0,8); title='Upcoming';
+    items=all.filter(d=>d.date>=today).slice(0,6); title='Coming up';
   }
   if(!items.length){
-    box.innerHTML=`<div class="section-label">${mailEsc(title)}</div><div class="card"><div class="mempty">${mstate.sel?'Nothing on this day':'No dates found in recent mail'}</div></div>`;
+    box.innerHTML=`<div class="section-label">${mailEsc(title)}</div><div class="card"><div class="mempty">${mstate.sel?'Nothing on this day':'No dates in recent mail'}</div></div>`;
     return;
   }
   box.innerHTML=`<div class="section-label">${mailEsc(title)}</div><div class="card" id="mailAgendaList"></div>`;
   const list=$('#mailAgendaList');
-  items.forEach(d=>list.appendChild(mailDateRow(d, d.thread?mailThread(doc,d.thread):null)));
+  items.forEach(d=>list.appendChild(mailDateRow(d, d.thread ? mailLabel(d.thread) : null)));
 }
-
-function mailDateRow(d,t){
+function mailDateRow(d,l){
   const el=document.createElement('details'); el.className='mrow';
-  const subj=t?t.subject:(d.what||d.text||'');
-  const who=t?`${t.from_name||t.from}, ${t.account}`:'';
+  const subj=l ? l.subject : (d.what||d.text||'');
+  const who=l ? `${l.from_name||l.from}${l.account?', '+l.account:''}` : '';
   el.innerHTML=`<summary><div class="mflag ${d.kind==='deadline'?'reply':'dated'}">${MAIL_SVG.cal}</div>
     <div class="mmain"><div class="mtop"><span class="mfrom">${mailEsc(mailDateLabel(d))}</span><span class="mwhen">${d.kind==='deadline'?'deadline':''}</span></div>
     <div class="msubj">${mailEsc(subj)}</div>${who?`<div class="msnip">${mailEsc(who)}</div>`:''}</div><span class="mchev">&#8250;</span></summary>`;
-  el.appendChild(mailActions(t,d));
-  return el;
-}
-
-function mailRenderGroups(doc){
-  const box=$('#mailGroups'); box.innerHTML='';
-  const threads=doc.threads||[];
-  [[3,'Needs a reply'],[2,'Dated or unread'],[1,'For you']].forEach(([p,label])=>{
-    const ts=threads.filter(t=>t.priority===p);
-    if(!ts.length) return;
-    box.insertAdjacentHTML('beforeend',`<div class="section-label">${label}</div>`);
-    const card=document.createElement('div'); card.className='card';
-    ts.forEach(t=>card.appendChild(mailThreadRow(t)));
-    box.appendChild(card);
-  });
-  const bulk=threads.filter(t=>t.priority===0);
-  if(bulk.length){
-    const det=document.createElement('details'); det.className='card mbulk';
-    det.style.marginTop='14px';
-    det.innerHTML=`<summary>Everything else, ${bulk.length} thread${bulk.length===1?'':'s'}</summary>`;
-    bulk.forEach(t=>det.appendChild(mailThreadRow(t)));
-    box.appendChild(det);
+  const panel=document.createElement('div'); panel.className='mpanel';
+  if(l && mailThreads()[l.id]){
+    const b=document.createElement('button'); b.type='button'; b.className='mref'; b.style.cssText='background:none;padding:6px 0;font-size:14px;';
+    b.textContent='Open in the review'; b.onclick=e=>{ e.preventDefault(); mailJump(l.id); }; panel.appendChild(b);
   }
-  if(!threads.length) box.innerHTML='<div class="mempty">Nothing new in the last week</div>';
-}
-
-function mailThreadRow(t){
-  const el=document.createElement('details'); el.className='mrow';
-  const flag = t.needs_reply ? `<div class="mflag reply">${MAIL_SVG.flag}</div>`
-    : (t.dates&&t.dates.length ? `<div class="mflag dated">${MAIL_SVG.cal}</div>`
-    : `<div class="mflag">${t.unread?'<i></i>':''}</div>`);
-  el.innerHTML=`<summary>${flag}<div class="mmain"><div class="mtop"><span class="mfrom">${mailEsc(t.from_name||t.from)}</span><span class="mwhen">${mailEsc(mailWhen(t.last))}</span></div>
-    <div class="msubj">${mailEsc(t.subject)}</div>${t.snippet?`<div class="msnip">${mailEsc(t.snippet)}</div>`:''}</div><span class="mchev">&#8250;</span></summary>`;
-  el.appendChild(mailActions(t, (t.dates&&t.dates[0])||null));
+  panel.appendChild(mailActions(l, d, {remove:!!l}));
+  el.appendChild(panel);
   return el;
 }
 
-function mailActions(t,d){
+function mailRenderThreads(){
+  const box=$('#mailThreads'); box.innerHTML='';
+  const list=mailThreadList();
+  if(list.length){
+    box.insertAdjacentHTML('beforeend','<div class="section-label">In this review</div>');
+    const card=document.createElement('div'); card.className='card';
+    list.forEach(t=>card.appendChild(mailThreadRow(t)));
+    box.appendChild(card);
+  }else if(mstate.rv){
+    box.innerHTML='<div class="mempty">Nothing in the review needs a thread</div>';
+  }
+  const wc=mstate.rv&&mstate.rv.weekly&&mstate.rv.weekly.counts;
+  const n=(wc&&wc.bulk_read) || (mstate.ov&&mstate.ov.counts&&mstate.ov.counts.bulk) || 0;
+  if(n) box.insertAdjacentHTML('beforeend',`<div class="mfoot">${n} other messages this week, read and not raised.</div>`);
+}
+function mailThreadRow(t){
+  const m=t.meta||{};
+  const el=document.createElement('details'); el.className='mrow'; el.dataset.tid=t.id;
+  const flag=(t.priority===3||m.needs_reply) ? `<div class="mflag reply">${MAIL_SVG.flag}</div>`
+    : ((m.dates&&m.dates.length) ? `<div class="mflag dated">${MAIL_SVG.cal}</div>` : '<div class="mflag"></div>');
+  el.innerHTML=`<summary>${flag}<div class="mmain"><div class="mtop"><span class="mfrom">${mailEsc(m.from_name||m.from||'')}</span><span class="mwhen">${mailEsc(mailWhen(m.last))}</span></div>
+    <div class="msubj">${mailEsc(m.subject||'')}</div><div class="msnip">${mailEsc(t.summary||'')}</div></div><span class="mchev">&#8250;</span></summary>`;
+  el.appendChild(mailPanel(t));
+  return el;
+}
+function mailPanel(t){
+  const m=t.meta||{}, box=document.createElement('div'); box.className='mpanel';
+  let html='';
+  if(t.context) html+=`<p><b>Context</b>${mailEsc(t.context)}</p>`;
+  if(t.implications) html+=`<p><b>What it means</b>${mailEsc(t.implications)}</p>`;
+  if(t.reply) html+=`<div class="mreply"><b>Suggested reply</b><div class="mq">${mailEsc(t.reply)}</div><button type="button" class="mcopy">${MAIL_SVG.copy}<span>Copy reply</span></button></div>`;
+  const dates=(m.dates||[]).map(x=>mailDateLabel(x)+(x.text?` (${x.text})`:'')).join('; ');
+  html+=`<p class="mmeta">${mailEsc(m.from||'')}${m.account?`, ${mailEsc(m.account)}`:''}, ${Number(m.n)||1} message${Number(m.n)===1?'':'s'}${dates?`<br>${mailEsc(dates)}`:''}</p>`;
+  box.innerHTML=html;
+  const cp=box.querySelector('.mcopy');
+  if(cp) cp.onclick=async e=>{ e.preventDefault(); try{ await navigator.clipboard.writeText(t.reply); mailToast('Reply copied'); }catch(err){ mailToast('Could not copy'); } };
+  box.appendChild(mailActions({id:t.id, ...m, summary:t.summary||''}, (m.dates&&m.dates[0])||null, {remove:true}));
+  return box;
+}
+
+/* --- the three quiet actions -------------------------------------------- */
+function mailActions(l,d,opts={}){
   const box=document.createElement('div'); box.className='macts';
-  const key=(t?t.id:'d')+'|'+(d?d.date+(d.time||''):'');
+  const key=(l?l.id:'d')+'|'+(d?d.date+(d.time||''):'');
   if(d){
     const b=document.createElement('button'); b.type='button';
     b.innerHTML=MAIL_SVG.cal+'<span>Add to Calendar</span>';
-    b.onclick=e=>{ e.preventDefault(); mailAddCal(t,d); };
+    b.onclick=e=>{ e.preventDefault(); mailAddCal(l,d); };
     box.appendChild(b);
   }
-  if(t){
+  if(l){
     const b=document.createElement('button'); b.type='button';
     const done=!!mstate.added[key];
     b.innerHTML=(done?MAIL_SVG.check:MAIL_SVG.todo)+`<span>${done?'Added to Todo':'Add to Todo'}</span>`;
     if(done){ b.classList.add('done'); b.disabled=true; }
-    b.onclick=e=>{ e.preventDefault(); mailAddTodo(t,d,b,key); };
+    b.onclick=e=>{ e.preventDefault(); mailAddTodo(l,d,b,key); };
     box.appendChild(b);
-    const info=document.createElement('details'); info.className='minfo';
-    const dates=(t.dates||[]).map(x=>mailDateLabel(x)+(x.text?` (${x.text})`:'')).join('; ');
-    const last=t.last?new Date(t.last).toLocaleString(undefined,{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
-    info.innerHTML=`<summary>${MAIL_SVG.info}<span>Details</span></summary>
-      <div class="mdetail"><b>${mailEsc(t.from_name||'')}</b> ${mailEsc(t.from)}<br>${mailEsc(t.account)}, ${Number(t.n)||1} message${Number(t.n)===1?'':'s'}, last ${mailEsc(last)}${dates?`<br>${mailEsc(dates)}`:''}${d&&d.what?`<br><span class="mq">${mailEsc(d.what)}</span>`:''}</div>`;
-    box.appendChild(info);
+    if(opts.remove){
+      const r=document.createElement('button'); r.type='button'; r.className='rm';
+      r.innerHTML=MAIL_SVG.trash+'<span>Remove from overview</span>';
+      r.onclick=e=>{ e.preventDefault(); mailDismiss(l.id); };
+      box.appendChild(r);
+    }
   }
   return box;
 }
 
+/* --- remove: local at once, the data repo after the undo window --------- */
+let _mailFlushT=null;
+function mailDismiss(id){
+  const at=new Date().toISOString();
+  mstate.dis[id]=at;
+  mailWriteDisq(mailReadDisq().filter(x=>x.id!==id).concat([{id, at}]));
+  mailRender();
+  mailToastUndo('Removed', ()=>{
+    delete mstate.dis[id];
+    mailWriteDisq(mailReadDisq().filter(x=>x.id!==id));
+    mailRender();
+  });
+  mailDismissFlush(6000);
+}
+function mailDismissFlush(delayMs){ clearTimeout(_mailFlushT); _mailFlushT=setTimeout(mailDismissSave, delayMs); }
+async function mailDismissSave(){
+  const q=mailReadDisq(); if(!q.length) return;
+  for(let attempt=0; attempt<3; attempt++){
+    try{
+      const {doc, sha}=await mailFetchJson(MAIL_DIS_PATH);
+      const cur=(doc&&Array.isArray(doc.items)) ? doc : {version:1, items:[]};
+      const have=new Set(cur.items.map(i=>i.id));
+      q.forEach(x=>{ if(!have.has(x.id)) cur.items.push({id:x.id, at:x.at}); });
+      cur.updated_at=new Date().toISOString();
+      const body={message:`mail: remove ${q.length} from overview`, content:b64(JSON.stringify(cur,null,1)+'\n')};
+      if(sha) body.sha=sha;
+      const res=await gh(MAIL_DIS_PATH,{method:'PUT', body:JSON.stringify(body)});
+      if(res.ok){
+        mailWriteDisq([]);
+        const server={}; cur.items.forEach(i=>{ server[i.id]=i.at||''; });
+        localStorage.setItem(MAIL_KEY, JSON.stringify({ov:mstate.ov, rv:mstate.rv, dis:server}));
+        return;
+      }
+      if(res.status===409) continue;            /* someone wrote; re-read and re-apply */
+      return;                                   /* kept in the queue; retried on next open */
+    }catch(e){ return; }
+  }
+}
+
 /* --- add to the phone's Calendar: an .ics through the share sheet, else a download --- */
-function mailIcs(t,d){
+function mailIcs(l,d){
   const esc=s=>String(s||'').replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/[,;]/g,m=>'\\'+m);
   const ymd=s=>s.replace(/-/g,'');
   const stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+Z$/,'Z');
-  const uid=`mail-${(t?t.id:'d')}-${d.date}${d.time?d.time.replace(':',''):''}@life-log`;
+  const uid=`mail-${(l?l.id:'d')}-${d.date}${d.time?d.time.replace(':',''):''}@life-log`;
   let when;
   if(d.time){
     const [h,m]=d.time.split(':').map(Number);
@@ -3181,18 +3401,18 @@ function mailIcs(t,d){
   }else{
     when=`DTSTART;VALUE=DATE:${ymd(d.date)}\r\nDTEND;VALUE=DATE:${ymd(mailNextDay(d.until||d.date))}`;
   }
-  const summary=t?t.subject:(d.what||d.text||'From mail');
-  const desc=[t?`From ${t.from_name||t.from} (${t.account})`:'', d.text?`Mentioned as: ${d.text}`:'', d.what||''].filter(Boolean).join('\n');
+  const summary=l ? l.subject : (d.what||d.text||'From mail');
+  const desc=[l?`From ${l.from_name||l.from} (${l.account||''})`:'', d.text?`Mentioned as: ${d.text}`:'', l&&l.summary?l.summary:(d.what||'')].filter(Boolean).join('\n');
   return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//life-log//mail//EN','BEGIN:VEVENT',
     `UID:${uid}`,`DTSTAMP:${stamp}`,when,`SUMMARY:${esc(summary)}`,`DESCRIPTION:${esc(desc)}`,
     'END:VEVENT','END:VCALENDAR'].join('\r\n');
 }
-async function mailAddCal(t,d){
-  const ics=mailIcs(t,d);
+async function mailAddCal(l,d){
+  const ics=mailIcs(l,d);
   try{
     const file=new File([ics],'event.ics',{type:'text/calendar'});
     if(navigator.canShare && navigator.canShare({files:[file]})){
-      await navigator.share({files:[file], title: t?t.subject:'Event'});
+      await navigator.share({files:[file], title: l?l.subject:'Event'});
       return;
     }
   }catch(e){ if(e && e.name==='AbortError') return; }
@@ -3202,14 +3422,14 @@ async function mailAddCal(t,d){
 }
 
 /* --- add to the Todo tab through its own queue: same item shape as todoAdd() --- */
-async function mailAddTodo(t,d,btn,key){
+async function mailAddTodo(l,d,btn,key){
   if(typeof tstate==='undefined'){ mailToast('Todo is not available'); return; }
   if(!tstate.doc){ try{ await todoLoad(); }catch(e){} }
   if(!tstate.doc){ mailToast('Could not open the todo list'); return; }
-  const inst = t.account==='EUR' || t.account==='Erasmus MC';
-  const item={ id:todoId(tstate.doc), text:t.subject.slice(0,200), cat: inst?'uni':'personal',
-    due: d?d.date:null, prio: t.needs_reply?1:2,
-    note:`Mail from ${t.from_name||t.from} (${t.account})${d&&d.text?`, ${d.text}`:''}`.slice(0,300),
+  const inst = l.account==='EUR' || l.account==='Erasmus MC';
+  const item={ id:todoId(tstate.doc), text:String(l.subject||'').slice(0,200), cat: inst?'uni':'personal',
+    due: d?d.date:null, prio: l.needs_reply?1:2,
+    note:(l.summary || `Mail from ${l.from_name||l.from} (${l.account||''})${d&&d.text?`, ${d.text}`:''}`).slice(0,300),
     done:false, created_at:new Date().toISOString(), done_at:null, reviewed_at:null };
   todoQueue({op:'add', at:new Date().toISOString(), item});
   mstate.added[key]=true;
@@ -3222,10 +3442,16 @@ function mailToast(msg){
   const el=$('#mailToast'); el.textContent=msg; el.classList.add('show');
   clearTimeout(_mailToastT); _mailToastT=setTimeout(()=>el.classList.remove('show'),1600);
 }
+function mailToastUndo(msg, fn){
+  const el=$('#mailToast'); el.innerHTML=`<span>${mailEsc(msg)}</span><button type="button">Undo</button>`;
+  el.querySelector('button').onclick=()=>{ clearTimeout(_mailFlushT); el.classList.remove('show'); fn(); };
+  el.classList.add('show');
+  clearTimeout(_mailToastT); _mailToastT=setTimeout(()=>el.classList.remove('show'),5000);
+}
 
 $('#tabMail').onclick = async()=>{ tab='mail'; paint(); mailRender(); await mailLoad(); mailRender(); };
-$('#mcalPrev').onclick = ()=>{ if(!mstate.doc) return; const m=mstate.month||new Date(); mstate.month=new Date(m.getFullYear(),m.getMonth()-1,1); mailRenderCal(mstate.doc); mailRenderAgenda(mstate.doc); };
-$('#mcalNext').onclick = ()=>{ if(!mstate.doc) return; const m=mstate.month||new Date(); mstate.month=new Date(m.getFullYear(),m.getMonth()+1,1); mailRenderCal(mstate.doc); mailRenderAgenda(mstate.doc); };
+$('#mcalPrev').onclick = ()=>{ const m=mstate.month||new Date(); mstate.month=new Date(m.getFullYear(),m.getMonth()-1,1); mailRenderCal(); mailRenderAgenda(); };
+$('#mcalNext').onclick = ()=>{ const m=mstate.month||new Date(); mstate.month=new Date(m.getFullYear(),m.getMonth()+1,1); mailRenderCal(); mailRenderAgenda(); };
 
 document.querySelector('#tabRate').onclick = async function(){
   tab = 'rate'; paint();
